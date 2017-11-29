@@ -61,9 +61,3 @@ def get_tau(locs,ignore,max_n_events):
     tau_b_unisize[0,:np.size(tau_b)]=tau_b # tau_b distribution with zeros padded to get to length no max_n_events
     
     return [tau_d_unisize,tau_b_unisize]
-
-def masterlooper(locs,**kwargs):
-    
-            
-
-    return groupprops
