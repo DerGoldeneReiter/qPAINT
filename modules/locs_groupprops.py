@@ -1,6 +1,5 @@
 
 import numpy as np
-from numba import jit
 
 def get_mean_x(locs):
     x=np.mean(locs['x'],axis=0)
