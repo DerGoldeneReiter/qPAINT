@@ -16,7 +16,7 @@ def single_dock(tau_b,tau_d,NoFrames):
     locs_photons=[]    
     on_frames=[]
     off_frames=[]
-    frame=0
+    frame=int(np.rint(np.random.exponential(tau_d))) # Start time with off event 
     
     while True:
         # Create on-event of duration on_frame (exponentially distributed)
