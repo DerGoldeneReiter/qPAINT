@@ -12,13 +12,13 @@ import fitfunc
 importlib.reload(l2grp)
 importlib.reload(fitfunc)
 # Set plot style
-plt.style.use(r'E:\Flo\repos\qPAINT\styles\FoM.mplstyle')
+plt.style.use('/fs/home/stehr/qPAINT/styles/FoM.mplstyle')
 #%%
 ######################################### Read in data
 # Define path to locs.hdf5 file
 
-dir_name=r'E:\Projects\qPAINT\data\18-01-12\sample01_p40_convampf_3x_T25_1\JS_18-01-16\ng=400_single'
-file_name='sample01_p40_convampf_3x_T25_1_MMStack_Pos0.ome_locs_render_picked.hdf5'
+dir_name='/fs/pool/pool-schwille-paint/Data/Simulation/18-04-16_copasi/'
+file_name='taub2s_kon2e6_n1_c20nM_locs_picked.hdf5'
 
 path=os.path.join(dir_name,file_name)
 # read in locs files
@@ -30,11 +30,11 @@ NoFrames=TIFmeta['Frames'] # Number of frames in tif stack
 
 #%%
 ######################################### Select group
-g=964
+g=48
 locs_g=locs[:][locs['group']==g]
 
 ######################################### Parameters for locs_groupprops
-ignore_dark=1
+ignore_dark=0
 NoDocks=1
 
 ########################################## Apply locs2groupprops module
@@ -47,8 +47,9 @@ ac=l2grp.get_ac(locs_g,NoFrames)
 # Fit autocorrelation with monoexponential
 popt=l2grp.get_ac_fit(locs_g,NoFrames)
 norm_factor=popt[0]+popt[2] # Normalization factor for normalization of amplitude to 1
+norm_factor=1
 # Dynamics according to ac
-[ac_p_inf,ac_tau_b,ac_tau_d]=l2grp.get_ac_tau(locs_g,NoFrames,NoDocks)
+[ac_tau_b,ac_tau_d]=l2grp.get_ac_tau(locs_g,NoFrames,NoDocks)
 [tau_b_misc,tau_d_misc,NoDocks_misc]=l2grp.get_misc_NoDocks(locs_g,NoFrames,ignore_dark,bright_ignore=True,fit='lin')
 
 ######################################### PlottinSg
@@ -59,9 +60,12 @@ plt.subplots_adjust(top=0.9, left=0.1, right=0.95,bottom=0.08, wspace=0.4, hspac
 
 # Autocorrelation
 ax=f.add_subplot(3,2,1)
-ax.set_title(r'$\tau_c$ = '+'%.2f, '%(popt[1])+r'$p_{\infty}$ = '+'%.3f, '%(ac_p_inf)+r'$\chi$ = %.3f'%(popt[3]))
+ax.set_title(r'$\tau_c$ = '+'%.2f, '%(popt[1])+
+             r'$G_0$ = '+'%.3f, '%(popt[0])+
+             r'$\chi$ = %.3f'%(popt[2])
+             )
 ax.plot(ac[1:,0],ac[1:,1]/norm_factor,'bx')
-ax.plot(ac[1:,0],fitfunc.ac_monoexp(ac[1:,0],*popt[0:3])/norm_factor,color='red')
+ax.plot(ac[1:,0],fitfunc.ac_monoexp(ac[1:,0],*popt[:-1])/norm_factor,color='red')
 ax.set_xscale('log')
 ax.set_ylabel('G [a.u]')
 # tau_d _ecdf linearized

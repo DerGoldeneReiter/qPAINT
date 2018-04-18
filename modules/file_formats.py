@@ -1,6 +1,11 @@
 # Load packages
 import h5py as h5py #hdf5 handling
 import yaml
+import pandas as pd
+
+#%%
+#def copasi_txt2locs(path):
+    
 
 #%%
 def read_locs(path):

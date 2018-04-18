@@ -1,15 +1,10 @@
 # Load packages
-import h5py as h5py #hdf5 handling
 import numpy as np #numpy data formats and operators
 import matplotlib.pyplot as plt #plotting
 import os #platform independent paths
-import importlib
-import sys
-from tqdm import tqdm
 import matplotlib as mpl
 
 # Load user defined functions
-import locs_groupprops as l2grp
 import file_formats as fifo
 
 ##################################################################################################### Set paths to files and labels

@@ -114,7 +114,7 @@ def autocorrelate(a, m=16, deltat=1, normalize=False,
 
     # We use the fluctuation of the signal around the mean
     if normalize:
-        trace -= traceavg
+        #trace -= traceavg #Not interested in signal around mean, correlation should drop to 1 when normalized!!
         assert traceavg != 0, "Cannot normalize: Average of `a` is zero!"
 
     # Otherwise the following for-loop will fail:

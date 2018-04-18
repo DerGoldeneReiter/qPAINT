@@ -9,8 +9,8 @@ def exp_pdf(x,p):
     y=1-(1/p)*np.exp(-x/p)
     return y
 
-def ac_monoexp(x,A,tau,off):
-    y=A*np.exp(-x/tau)+off
+def ac_monoexp(x,A,tau):
+    y=A*np.exp(-x/tau)+1.
     return y
 
 def ecdf(x):

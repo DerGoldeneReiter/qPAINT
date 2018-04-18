@@ -3,7 +3,6 @@ import numpy as np
 from tqdm import tqdm
 import h5py as h5py #hdf5 handling
 import scipy.optimize
-import multipletau
 import importlib
 
 # Import own modules in qPAINT
@@ -78,8 +77,7 @@ def get_ac(locs,NoFrames,m=16):
     trace=get_trace(locs,NoFrames)
     # Multiple tau autocorrelation
     ac=multitau.autocorrelate(np.transpose(trace),m=m, deltat=1,
-                                 normalize=False,copy=False, dtype=np.float64())
-#    ac=ac[:-(m),:] # Cut off tail due to added zeros in non-normalized mode
+                                 normalize=True,copy=False, dtype=np.float64())
     return ac 
 
 #%%
@@ -87,21 +85,20 @@ def get_ac_fit(locs,NoFrames):
     # Get multiple tau autocorrelation
     ac=get_ac(locs,NoFrames)
     # Define start parameters for fit
-    p0=np.empty([3])
+    p0=np.empty([2])
     p0[0]=ac[1,1] # Amplitude
-    p0[2]=ac[-1,1] # offset
-    halfvalue=p0[2]+(p0[0]-p0[2])/2 # Value of half decay of ac
+    halfvalue=1.+(p0[0]-1.)/2 # Value of half decay of ac
     p0[1]=np.argmin(np.abs(ac[:,1]-halfvalue)) # tau
     # Bounds for fit 
-    lowbounds=np.array([0,0,0])
-    upbounds=np.array([np.inf,np.inf,np.inf])
+    lowbounds=np.array([0,0])
+    upbounds=np.array([np.inf,np.inf])
     # Fit with monoexponential function, disregard
     try:
         popt,pcov=scipy.optimize.curve_fit(fitfunc.ac_monoexp,ac[1:,0],ac[1:,1],p0,bounds=(lowbounds,upbounds),method='trf')
     except RuntimeError:
         popt=p0
         
-    chisquare=np.sum(np.square(np.divide(fitfunc.ac_monoexp(ac[1:,0],*popt)-ac[1:,1],popt[0]+popt[2])))/len(ac)
+    chisquare=np.sum(np.square(np.divide(fitfunc.ac_monoexp(ac[1:,0],*popt)-ac[1:,1],popt[0]+1.)))/len(ac)
     popt=np.append(popt,np.sqrt(chisquare))
     return popt
 
@@ -120,28 +117,25 @@ def get_ac_NoDocks(locs,NoFrames,p_inf_1):
     #%%
 def get_misc_NoDocks(locs,NoFrames,ignore=1,**kwargs):
     # Get ac fit parameters
-    [G_0,tau_c,G_inf,chisquare]=get_ac_fit(locs,NoFrames)
-    p_inf=G_inf/G_0 # p_inf
+    [G_0,tau_c,chisquare]=get_ac_fit(locs,NoFrames)
     # Get Picasso fit parameters
     [n_events,tau_b_pi,tau_d_pi]=get_tau(locs,ignore,out='param',bright_ignore=True,fit='lin')
-    
-    # Get tau_b by using misc terms p_inf and tau_d_pi
-    tau_b=p_inf*tau_d_pi
-    tau_d=(tau_b*tau_c)/np.abs(tau_b-tau_c)
+    # Get tau_b by using misc terms G_0 and tau_d_pi
+    tau_b=tau_d_pi/G_0
+    tau_d=np.divide(tau_b*tau_c,tau_b-tau_c)
+#    tau_d=np.abs(tau_d)
     NoDocks=tau_d/tau_d_pi
     return [tau_b,tau_d,NoDocks]
 
 #%%
 def get_ac_tau(locs,NoFrames,NoDocks):
     # Get ac fit parameters
-    [G_0,tau_c,G_inf,chisquare]=get_ac_fit(locs,NoFrames)
-    # p_inf
-    p_inf=G_inf/G_0
+    [G_0,tau_c,chisquare]=get_ac_fit(locs,NoFrames)
     # tau_b extracetd by ac
-    ac_tau_b=(1+p_inf/NoDocks)*tau_c
+    ac_tau_b=(1+1/(G_0*NoDocks))*tau_c
     # tau_d extracetd by ac
-    ac_tau_d=(1+NoDocks/p_inf)*tau_c
-    return [p_inf,ac_tau_b,ac_tau_d]
+    ac_tau_d=(1+G_0*NoDocks)*tau_c
+    return [ac_tau_b,ac_tau_d]
      
 #%%
 def get_tau(locs,ignore=1,**kwargs):
@@ -267,9 +261,10 @@ def locs2groupprops(path,ignore_dark=1,**kwargs):
                                     ('n_locs','i4',1),('n_events','i4',1),('n_events_ignore','i4',1), # Statistics                                    
                                     ('tau_b','f4',1),('tau_b_ignore','f4',1),('tau_d','f4',1), # qPAINT dynamics
                                     ('tau_b_lin','f4',1),('tau_b_lin_ignore','f4',1),('tau_d_lin','f4',1), # qPAINT dynamics linearized
-                                    ('ac_A','f4',1),('ac_tau','f4',1),('ac_offset','f4',1),('ac_chisquare','f4',1), # ac fit                                    
-                                    ('ac_p_inf','f4',1),('ac_tau_b','f4',1),('ac_tau_d','f4',1), # ac dynamics
-                                    ('NoDocks','f4',1),('err_NoDocks','f4',1)
+                                    ('ac_A','f4',1),('ac_tau','f4',1),('ac_chisquare','f4',1), # ac fit                                    
+                                    ('ac_tau_b','f4',1),('ac_tau_d','f4',1), # ac dynamics
+                                    ('NoDocks','f4',1),('err_NoDocks','f4',1), # NoDocks with calibration
+                                    ('tau_b_misc','f4',1),('tau_d_misc','f4',1),('NoDocks_misc','f4',1)
                                     ])
     # Assign groups
     groupprops['group'][:]=group_list
@@ -317,10 +312,9 @@ def locs2groupprops(path,ignore_dark=1,**kwargs):
         groupprops['tau_d_lin'][i]=tau_d_lin
         
         # ac fit
-        [ac_A,ac_tau,ac_offset,ac_chisquare]=get_ac_fit(locs_g,NoFrames)
+        [ac_A,ac_tau,ac_chisquare]=get_ac_fit(locs_g,NoFrames)
         groupprops['ac_A'][i]=ac_A
         groupprops['ac_tau'][i]=ac_tau
-        groupprops['ac_offset'][i]=ac_offset
         groupprops['ac_chisquare'][i]=ac_chisquare
         # ac dynamics
         if 'p_inf_1' in kwargs:# Case: p_inf_1 is given 
@@ -335,11 +329,16 @@ def locs2groupprops(path,ignore_dark=1,**kwargs):
             groupprops['err_NoDocks'][i]=err_NoDocks
             mode='NoDocks=%d'%(NoDocks)
            
-        [ac_p_inf,ac_tau_b,ac_tau_d]=get_ac_tau(locs_g,NoFrames,NoDocks)
-        groupprops['ac_p_inf'][i]=ac_p_inf
+        [ac_tau_b,ac_tau_d]=get_ac_tau(locs_g,NoFrames,NoDocks)
         groupprops['ac_tau_b'][i]=ac_tau_b
         groupprops['ac_tau_d'][i]=ac_tau_d
-              
+        
+        # Mixed dynamics
+        [tau_b_misc,tau_d_misc,NoDocks_misc]=get_misc_NoDocks(locs_g,NoFrames,ignore_dark,bright_ignore=True,fit='lin')
+        groupprops['tau_b_misc'][i]=tau_b_misc
+        groupprops['tau_d_misc'][i]=tau_d_misc
+        groupprops['NoDocks_misc'][i]=NoDocks_misc
+        
     # Save groupprops in hdf5 file
     groupprops_file = h5py.File(path.replace('.hdf5','_groupprops.hdf5'), "w")
     dset=groupprops_file.create_dataset("locs", np.shape(groupprops), dtype=groupprops.dtype)
