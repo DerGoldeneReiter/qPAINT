@@ -15,14 +15,14 @@ importlib.reload(l2grp)
 
 #%%
 # Define folder of locs_picked.hdf5 file
-dir_names=['/fs/pool/pool-schwille-paint/Data/Simulation/18-04-16_copasi/']*5
+dir_names=['/fs/pool/pool-schwille-paint/Data/Simulation/18-04-19_copasi_biexp/']
 
 # Define names of locs_picked.hdf5 file
-file_names=['taub2s_kon2e6_n1_c5nM_locs_picked.hdf5']
-file_names.extend(['taub2s_kon2e6_n1_c10nM_locs_picked.hdf5'])
-file_names.extend(['taub2s_kon2e6_n1_c20nM_locs_picked.hdf5'])
-file_names.extend(['taub2s_kon2e6_n1_c50nM_locs_picked.hdf5'])
-file_names.extend(['taub2s_kon2e6_n1_c100nM_locs_picked.hdf5'])
+file_names=['taub1s&taub5s_kon2e6_n60&12_c10nM_locs_picked.hdf5']
+#file_names.extend(['taub2s_kon2e6_n24_c10nM_locs_picked.hdf5'])
+#file_names.extend(['taub2s_kon2e6_n24_c20nM_locs_picked.hdf5'])
+#file_names.extend(['taub2s_kon2e6_n24_c50nM_locs_picked.hdf5'])
+#file_names.extend(['taub2s_kon2e6_n24_c100nM_locs_picked.hdf5'])
 
 # Create full path list
 path=[]
@@ -31,7 +31,7 @@ for i in range(0, len(file_names)):
 
 # Possible locs2groupprops input arguments
 ignore_dark=[0]*5
-NoDocks=[1]*5
+NoDocks=[12]*5
 # Load p_inf_1 calibration array
 #p_inf_1=np.load(r'E:\Flo\repos\qPAINT\scripts\analysis\18-01-04_OwnSimulation_Screening\p_inf_1.npy')
 

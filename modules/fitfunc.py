@@ -13,6 +13,10 @@ def ac_monoexp(x,A,tau):
     y=A*np.exp(-x/tau)+1.
     return y
 
+def ac_biexp(x,As,taus,Al,taul):
+    y=As*np.exp(-x/taus)+Al*np.exp(-x/taul)+1.
+    return y
+
 def ecdf(x):
     xs,ys=np.unique(x,return_counts=True) # Give unique values and counts in x
     ys=np.cumsum(ys) # Empirical cfd of dist without bias from binning

@@ -92,7 +92,7 @@ def get_ac_fit(locs,NoFrames):
     # Bounds for fit 
     lowbounds=np.array([0,0])
     upbounds=np.array([np.inf,np.inf])
-    # Fit with monoexponential function, disregard
+    # Fit with monoexponential function
     try:
         popt,pcov=scipy.optimize.curve_fit(fitfunc.ac_monoexp,ac[1:,0],ac[1:,1],p0,bounds=(lowbounds,upbounds),method='trf')
     except RuntimeError:
@@ -102,6 +102,34 @@ def get_ac_fit(locs,NoFrames):
     popt=np.append(popt,np.sqrt(chisquare))
     return popt
 
+#%%
+def get_ac_fit_bi(locs,NoFrames):
+    # Get multiple tau autocorrelation
+    ac=get_ac(locs,NoFrames)
+    # Define start parameters for fit
+    p0=np.empty([4])
+    p0[0]=(ac[1,1]-1.)/2 # Amplitude short
+    p0[2]=p0[0]      # Amplitude long
+    
+    halfvalue=1.+p0[0] # Value of half decay of ac
+    p0[3]=ac[np.argmin(np.abs(ac[:,1]-halfvalue)),0] # tau long
+    p0[1]=p0[3]*0.5 # tau short
+    p0[3]=p0[3]*4   # tau long
+    
+    # Bounds for fit
+    lowbounds=np.array([0,1.,0,1.])
+    upbounds=np.array([ac[1,1],np.inf,ac[1,1],np.inf])
+    
+    # Fit with monoexponential function, disregard
+    try:
+        popt,pcov=scipy.optimize.curve_fit(fitfunc.ac_biexp,ac[1:,0],ac[1:,1],p0,bounds=(lowbounds,upbounds),method='trf')
+#        popt,pcov=scipy.optimize.curve_fit(fitfunc.ac_biexp,ac[1:,0],ac[1:,1],p0,method='lm')
+    except RuntimeError:
+        popt=p0
+        
+    chisquare=np.sum(np.square(np.divide(fitfunc.ac_biexp(ac[1:,0],*popt)-ac[1:,1],popt[0]+popt[2]+1.)))/len(ac)
+    popt=np.append(popt,np.sqrt(chisquare))
+    return popt
 #%%
 def get_ac_NoDocks(locs,NoFrames,p_inf_1):
     # Get ac fit parameters
@@ -261,7 +289,8 @@ def locs2groupprops(path,ignore_dark=1,**kwargs):
                                     ('n_locs','i4',1),('n_events','i4',1),('n_events_ignore','i4',1), # Statistics                                    
                                     ('tau_b','f4',1),('tau_b_ignore','f4',1),('tau_d','f4',1), # qPAINT dynamics
                                     ('tau_b_lin','f4',1),('tau_b_lin_ignore','f4',1),('tau_d_lin','f4',1), # qPAINT dynamics linearized
-                                    ('ac_A','f4',1),('ac_tau','f4',1),('ac_chisquare','f4',1), # ac fit                                    
+                                    ('ac_A','f4',1),('ac_tau','f4',1),('ac_chisquare','f4',1), # ac fit mono
+                                    ('A1','f4',1),('tau1','f4',1),('A2','f4',1),('tau2','f4',1),('chisquare_bi','f4',1), # ac fit bi
                                     ('ac_tau_b','f4',1),('ac_tau_d','f4',1), # ac dynamics
                                     ('NoDocks','f4',1),('err_NoDocks','f4',1), # NoDocks with calibration
                                     ('tau_b_misc','f4',1),('tau_d_misc','f4',1),('NoDocks_misc','f4',1)
@@ -311,11 +340,20 @@ def locs2groupprops(path,ignore_dark=1,**kwargs):
         groupprops['tau_b_lin_ignore'][i]=tau_b_lin_ignore
         groupprops['tau_d_lin'][i]=tau_d_lin
         
-        # ac fit
+        # ac fit mono
         [ac_A,ac_tau,ac_chisquare]=get_ac_fit(locs_g,NoFrames)
         groupprops['ac_A'][i]=ac_A
         groupprops['ac_tau'][i]=ac_tau
         groupprops['ac_chisquare'][i]=ac_chisquare
+        # ac fit bi
+        [A1,tau1,A2,tau2,chisquare_bi]=get_ac_fit_bi(locs_g,NoFrames)
+        groupprops['A1'][i]=A1
+        groupprops['tau1'][i]=tau1
+        groupprops['A2'][i]=A2
+        groupprops['tau2'][i]=tau2
+        groupprops['chisquare_bi'][i]=chisquare_bi
+        
+        [ac_A,ac_tau,ac_chisquare]=get_ac_fit(locs_g,NoFrames)
         # ac dynamics
         if 'p_inf_1' in kwargs:# Case: p_inf_1 is given 
             [NoDocks,err_NoDocks]=get_ac_NoDocks(locs_g,NoFrames,kwargs['p_inf_1'])

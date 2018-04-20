@@ -1,7 +1,7 @@
 # Load packages
 import numpy as np #numpy data formats and operators
 import matplotlib.pyplot as plt #plotting
-import matplotlib as mpl
+
 import os #platform independent paths
 import importlib
 # Load user defined functionsf
@@ -17,8 +17,8 @@ plt.style.use('/fs/home/stehr/qPAINT/styles/FoM.mplstyle')
 ######################################### Read in data
 # Define path to locs.hdf5 file
 
-dir_name='/fs/pool/pool-schwille-paint/Data/Simulation/18-04-16_copasi/'
-file_name='taub2s_kon2e6_n1_c20nM_locs_picked.hdf5'
+dir_name='/fs/pool/pool-schwille-paint/Data/Simulation/18-04-19_copasi_biexp/'
+file_name='taub1s&taub5s_kon2e6_n60&12_c10nM_locs_picked.hdf5'
 
 path=os.path.join(dir_name,file_name)
 # read in locs files
@@ -30,7 +30,7 @@ NoFrames=TIFmeta['Frames'] # Number of frames in tif stack
 
 #%%
 ######################################### Select group
-g=48
+g=34
 locs_g=locs[:][locs['group']==g]
 
 ######################################### Parameters for locs_groupprops
@@ -46,54 +46,58 @@ trace=l2grp.get_trace(locs_g,NoFrames)
 ac=l2grp.get_ac(locs_g,NoFrames)
 # Fit autocorrelation with monoexponential
 popt=l2grp.get_ac_fit(locs_g,NoFrames)
-norm_factor=popt[0]+popt[2] # Normalization factor for normalization of amplitude to 1
-norm_factor=1
+popt_bi=l2grp.get_ac_fit_bi(locs_g,NoFrames)
+
 # Dynamics according to ac
 [ac_tau_b,ac_tau_d]=l2grp.get_ac_tau(locs_g,NoFrames,NoDocks)
 [tau_b_misc,tau_d_misc,NoDocks_misc]=l2grp.get_misc_NoDocks(locs_g,NoFrames,ignore_dark,bright_ignore=True,fit='lin')
 
-######################################### PlottinSg
+######################################### Plotting
 f=plt.figure(num=10,figsize=[9,8])
 f.clear()
 f.suptitle('Group = %i'%(g))
 plt.subplots_adjust(top=0.9, left=0.1, right=0.95,bottom=0.08, wspace=0.4, hspace=0.45)
-
-# Autocorrelation
+################################################################################ Autocorrelation
 ax=f.add_subplot(3,2,1)
 ax.set_title(r'$\tau_c$ = '+'%.2f, '%(popt[1])+
              r'$G_0$ = '+'%.3f, '%(popt[0])+
              r'$\chi$ = %.3f'%(popt[2])
              )
-ax.plot(ac[1:,0],ac[1:,1]/norm_factor,'bx')
-ax.plot(ac[1:,0],fitfunc.ac_monoexp(ac[1:,0],*popt[:-1])/norm_factor,color='red')
+ax.plot(ac[1:,0],ac[1:,1],'bx')
+ax.plot(ac[1:,0],fitfunc.ac_monoexp(ac[1:,0],*popt[:-1]),color='red')
+# Test double exponential
+ax.plot(ac[1:,0],fitfunc.ac_biexp(ac[1:,0],*popt_bi[:-1]),color='black',ls='-')
+ax.plot(ac[1:,0],fitfunc.ac_monoexp(ac[1:,0],*popt_bi[0:2]),color='black',ls='--')
+ax.plot(ac[1:,0],fitfunc.ac_monoexp(ac[1:,0],*popt_bi[2:4]),color='black',ls='--')
+
 ax.set_xscale('log')
 ax.set_ylabel('G [a.u]')
-# tau_d _ecdf linearized
+################################################################################ tau_d _ecdf linearized
 ax=f.add_subplot(3,2,3)
 ax.set_title(r'$\tau_d$ = '+'%.2f'%(qTau['tau_d_mean'][0]))
 ax.plot(qTau['tau_d_bins'][0],-np.log(1-qTau['tau_d_cdf'][0]),'x')
 ax.plot(qTau['tau_d_bins'][0],qTau['tau_d_bins'][0]/qTau['tau_d_mean'][0])
 ax.set_ylabel('-log[1-ECDF(bright)]')
-# tau_b ecdf linearized
+################################################################################ tau_b ecdf linearized
 ax=f.add_subplot(3,2,5)
 ax.set_title(r'$\tau_b$ = '+'%.2f'%(qTau['tau_b_mean'][0]))
 ax.plot(qTau['tau_b_bins'][0],-np.log(1-qTau['tau_b_cdf'][0]),'x')
 ax.plot(qTau['tau_b_bins'][0],qTau['tau_b_bins'][0]/qTau['tau_b_mean'][0])
 ax.set_xlabel('Frame')
 ax.set_ylabel('-log[1-ECDF(dark)]')
-# x vs y
+################################################################################ x vs y
 ax=f.add_subplot(3,2,2)
 ax.scatter(locs_g['x'][:],locs_g['y'][:],marker='o',alpha=0.1)
 ax.set_aspect('equal')
 ax.set_title('Localizations')
 ax.set_xlabel('x [px]')
 ax.set_ylabel('y [px]')
-# Photon statistics
+################################################################################ Photon statistics
 ax=f.add_subplot(3,2,4)
 ax.hist(locs_g['photons'][:],bins='fd')
 ax.set_ylabel('Counts')
 ax.set_xlabel('Photons')
-# Trace
+################################################################################ Trace
 ax=f.add_subplot(3,2,6)
 ax.plot(np.arange(0,NoFrames),trace[0,:],'b-')
 ax.set_xlim([0,float(NoFrames)])

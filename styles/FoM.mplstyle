@@ -1,9 +1,9 @@
 
 figure.figsize:3.9,3.3
 figure.subplot.bottom: 0.17
-figure.subplot.top: 0.99
+figure.subplot.top: 0.97
 figure.subplot.left: 0.2
-figure.subplot.right: 0.99
+figure.subplot.right: 0.97
 
 figure.edgecolor:white
 figure.facecolor:white
@@ -28,8 +28,10 @@ axes.labelcolor:black
 axes.prop_cycle: cycler('color', ['b','r','g','m','y'])
 xtick.color:black
 ytick.color:black
+ytick.minor.visible: True
+xtick.minor.visible: True
 
-font.sans-serif: Calibri
+font.sans-serif: DejaVu Sans
 mathtext.default:regular
 
 legend.borderaxespad:0.1
