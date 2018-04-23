@@ -123,12 +123,16 @@ def get_ac_fit_bi(locs,NoFrames):
     # Fit with monoexponential function, disregard
     try:
         popt,pcov=scipy.optimize.curve_fit(fitfunc.ac_biexp,ac[1:,0],ac[1:,1],p0,bounds=(lowbounds,upbounds),method='trf')
-#        popt,pcov=scipy.optimize.curve_fit(fitfunc.ac_biexp,ac[1:,0],ac[1:,1],p0,method='lm')
     except RuntimeError:
         popt=p0
         
     chisquare=np.sum(np.square(np.divide(fitfunc.ac_biexp(ac[1:,0],*popt)-ac[1:,1],popt[0]+popt[2]+1.)))/len(ac)
     popt=np.append(popt,np.sqrt(chisquare))
+    
+    #Sort fit parameters
+    if popt[1]>=popt[3]:
+        popt[[0,1,2,3]]=popt[[2,3,0,1]] # Sort according to ascending tau_cs
+        
     return popt
 #%%
 def get_ac_NoDocks(locs,NoFrames,p_inf_1):

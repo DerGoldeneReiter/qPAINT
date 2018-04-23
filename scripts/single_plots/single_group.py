@@ -17,8 +17,8 @@ plt.style.use('/fs/home/stehr/qPAINT/styles/FoM.mplstyle')
 ######################################### Read in data
 # Define path to locs.hdf5 file
 
-dir_name='/fs/pool/pool-schwille-paint/Data/Simulation/18-04-19_copasi_biexp/'
-file_name='taub1s&taub5s_kon2e6_n60&12_c10nM_locs_picked.hdf5'
+dir_name='/fs/pool/pool-schwille-paint/Data/Simulation/18-04-19_copasi_biexp'
+file_name='taub1s&taub5s_kon2e6_n12_c10nM_locs_picked.hdf5'
 
 path=os.path.join(dir_name,file_name)
 # read in locs files
@@ -30,7 +30,7 @@ NoFrames=TIFmeta['Frames'] # Number of frames in tif stack
 
 #%%
 ######################################### Select group
-g=34
+g=39
 locs_g=locs[:][locs['group']==g]
 
 ######################################### Parameters for locs_groupprops
@@ -56,12 +56,16 @@ popt_bi=l2grp.get_ac_fit_bi(locs_g,NoFrames)
 f=plt.figure(num=10,figsize=[9,8])
 f.clear()
 f.suptitle('Group = %i'%(g))
-plt.subplots_adjust(top=0.9, left=0.1, right=0.95,bottom=0.08, wspace=0.4, hspace=0.45)
+plt.subplots_adjust(top=0.85, left=0.1, right=0.95,bottom=0.08, wspace=0.4, hspace=0.45)
 ################################################################################ Autocorrelation
 ax=f.add_subplot(3,2,1)
 ax.set_title(r'$\tau_c$ = '+'%.2f, '%(popt[1])+
              r'$G_0$ = '+'%.3f, '%(popt[0])+
-             r'$\chi$ = %.3f'%(popt[2])
+             r'$\chi$ = %.3f'%(popt[2])+'\n'
+             r'$\tau_1$ = '+'%.2f, '%(popt_bi[1])+
+             r'$G_1$ = '+'%.3f, '%(popt_bi[0])+'\n'
+             r'$\tau_2$ = '+'%.2f, '%(popt_bi[3])+
+             r'$G_2$ = '+'%.3f, '%(popt_bi[2])
              )
 ax.plot(ac[1:,0],ac[1:,1],'bx')
 ax.plot(ac[1:,0],fitfunc.ac_monoexp(ac[1:,0],*popt[:-1]),color='red')

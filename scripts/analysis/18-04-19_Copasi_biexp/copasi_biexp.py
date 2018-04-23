@@ -45,7 +45,7 @@ for i in range(0,len(path)):
     groupprops_list.append(groupprops)# List containing all groupprops arrays (unfiltered)
 
     ################# Filter
-#    groupprops=groupprops[:][groupprops['tau2']<300] 
+    groupprops=groupprops[:][groupprops['tau2']<300] 
 #    groupprops=groupprops[:][groupprops['A1']<0.3]
 #    groupprops=groupprops[:][groupprops['tau1']<40]
     
@@ -58,7 +58,7 @@ for i in range(0,len(path)):
         stds[name][i]=np.std(groupprops[name])#/np.sqrt(len(groupprops))
 
 ################################################### Show filtering   
-file=1
+file=0
 field='tau1'
 f=plt.figure(num=1)
 f.clear()
@@ -67,33 +67,15 @@ ax.hist(groupprops_list_filter[file][field][:],bins='fd',label=field)
 plt.legend(loc=1)
 plt.show()
 
-field='tau2'
+field1='tau1'
+field2='tau2'
 f=plt.figure(num=2)
 f.clear()
 ax=f.add_subplot(1,1,1)
-ax.hist(groupprops_list_filter[file][field][:],bins='fd',label=field)
+field='tau1'
+ax.hist(groupprops_list_filter[file][field][:],bins='fd',label=field,alpha=0.5)
+field='tau2'
+ax.hist(groupprops_list_filter[file][field][:],bins='fd',label=field,alpha=0.5)
 plt.legend(loc=1)
 plt.show()
 
-field='A1'
-f=plt.figure(num=3)
-f.clear()
-ax=f.add_subplot(1,1,1)
-ax.hist(groupprops_list_filter[file][field][:],bins='fd',label=field)
-plt.legend(loc=1)
-plt.show()
-
-field='A2'
-f=plt.figure(num=4)
-f.clear()
-ax=f.add_subplot(1,1,1)
-ax.hist(groupprops_list_filter[file][field][:],bins='fd',label=field)
-plt.legend(loc=1)
-plt.show()
-
-#f=plt.figure(num=5)
-#f.clear()
-#ax=f.add_subplot(1,1,1)
-#ax.hist(np.divide(groupprops_list_filter[file]['A2'][:],groupprops_list_filter[file]['A1'][:]),bins='fd',label='A2/A1')
-#plt.legend(loc=1)
-#plt.show()

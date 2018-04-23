@@ -18,7 +18,7 @@ importlib.reload(l2grp)
 dir_names=['/fs/pool/pool-schwille-paint/Data/Simulation/18-04-19_copasi_biexp/']
 
 # Define names of locs_picked.hdf5 file
-file_names=['taub1s&taub5s_kon2e6_n60&12_c10nM_locs_picked.hdf5']
+file_names=['taub1s&taub5s_kon2e6_n12_c10nM_locs_picked.hdf5']
 #file_names.extend(['taub2s_kon2e6_n24_c10nM_locs_picked.hdf5'])
 #file_names.extend(['taub2s_kon2e6_n24_c20nM_locs_picked.hdf5'])
 #file_names.extend(['taub2s_kon2e6_n24_c50nM_locs_picked.hdf5'])
