@@ -181,7 +181,7 @@ def get_ac_tau(locs,NoFrames,NoDocks):
 def get_tau(locs,ignore=1,**kwargs):
     ################################################################ Get tau_d distribution
     dframes=locs['frame'][1:]-locs['frame'][0:-1] # Differentiate frames
-    dframes=np.float64(dframes)    
+    dframes=dframes.astype(float)
     tau_d_dist=dframes[dframes>2] # Remove all dark frame-distances >2 (i.e. 1 dark frame between two bright frames neglected)
     tau_d_dist=np.sort(tau_d_dist) # Sorted tau_d distribution
     
