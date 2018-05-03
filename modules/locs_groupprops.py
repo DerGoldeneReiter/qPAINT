@@ -97,6 +97,10 @@ def get_ac_fit(locs,NoFrames):
         popt,pcov=scipy.optimize.curve_fit(fitfunc.ac_monoexp,ac[1:,0],ac[1:,1],p0,bounds=(lowbounds,upbounds),method='trf')
     except RuntimeError:
         popt=p0
+    except ValueError:
+        popt=p0
+    except TypeError:
+        popt=p0
         
     chisquare=np.sum(np.square(np.divide(fitfunc.ac_monoexp(ac[1:,0],*popt)-ac[1:,1],popt[0]+1.)))/len(ac)
     popt=np.append(popt,np.sqrt(chisquare))
@@ -124,6 +128,10 @@ def get_ac_fit_bi(locs,NoFrames):
     try:
         popt,pcov=scipy.optimize.curve_fit(fitfunc.ac_biexp,ac[1:,0],ac[1:,1],p0,bounds=(lowbounds,upbounds),method='trf')
     except RuntimeError:
+        popt=p0
+    except ValueError:
+        popt=p0
+    except TypeError:
         popt=p0
         
     chisquare=np.sum(np.square(np.divide(fitfunc.ac_biexp(ac[1:,0],*popt)-ac[1:,1],popt[0]+popt[2]+1.)))/len(ac)
@@ -222,6 +230,10 @@ def get_tau(locs,ignore=1,**kwargs):
                 tau_b_mean,pcov_b=scipy.optimize.curve_fit(fitfunc.exp_cdf_linearized,tau_b_bins,-np.log(np.abs(1-tau_b_cdf)),p0_b) # Fitting
         except RuntimeError:
             tau_b_mean=p0_b
+        except ValueError:
+            tau_b_mean=p0_b
+        except TypeError:
+            tau_b_mean=p0_b
             
     ################ Extract tau_d_mean
     if np.size(tau_d_dist)<=5: # If size of tau_d distribution<=5 --> mean of distribution
@@ -239,7 +251,11 @@ def get_tau(locs,ignore=1,**kwargs):
                 tau_d_mean,pcov_d=scipy.optimize.curve_fit(fitfunc.exp_cdf_linearized,tau_d_bins,-np.log(np.abs(1-tau_d_cdf)),p0_d) # Fitting
         except RuntimeError:
             tau_d_mean=p0_d
-
+        except ValueError:
+            tau_d_mean=p0_d
+        except TypeError:
+            tau_d_mean=p0_d
+            
     # Output configuration
     try:
         if kwargs['out']=='param':
