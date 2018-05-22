@@ -1,4 +1,4 @@
-
+import scipy.special
 import numpy as np
 
 def exp_cdf(x,p):
@@ -54,3 +54,32 @@ def w_mean(mean,std):
     # Weighted std
     w_std=np.sqrt(np.sum(np.multiply(w,np.power(mean-w_mean,2)))/w_sum)
     return [w_mean,w_std]
+
+def get_e_ecdf(x):
+    xs,ys=ecdf(x)
+    value=1-1/np.exp(1)
+    index=np.argmin(np.abs(ys-value))
+    e_ecdf=xs[index]
+    return e_ecdf
+
+def tau_c_of_conc(conc,koff,kon):
+    y=np.divide(1,koff+kon*conc)
+    return y
+
+def A_of_conc(conc,koff,kon,N):
+    y=np.divide(koff,N*kon*conc)
+    return y
+
+def gammainc_up(mu,x):
+    y=scipy.special.gamma(mu)*(1-scipy.special.gammainc(mu,x))
+    return y
+
+def poisson_continuous(x,mu):
+#    y=np.divide(gammainc_up(mu,x),scipy.special.gamma(x))
+    y=np.exp(x*np.log(mu)-mu-scipy.special.gammaln(x+1))
+    return y
+
+def poisson_continuous_cdf(x,mu):
+    y=np.divide(gammainc_up(mu,x),scipy.special.gamma(x))
+    
+    return y
