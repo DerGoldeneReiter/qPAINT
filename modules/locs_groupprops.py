@@ -61,14 +61,10 @@ def get_trace(locs,NoFrames):
     frames,frames_count=np.unique(locs['frame'],return_counts=True)
     # Frames with mutiple loaclizations
     frames_multi=frames[frames_count>1]
-    # Number of frames with multiple localizations in group
-    NoMultiFrames=np.size(frames_multi)
     # Replace single localization frame phtons by sum of multiple localization frame photons
     for i in range(0,np.size(frames_multi)):
         trace[0,frames_multi[i]]=np.sum(locs['photons'][locs['frame']==frames_multi[i]])
     
-    # Correct for negative photon values
-#    trace=np.abs(trace)
     return trace
 
 #%%
@@ -83,7 +79,7 @@ def get_ac(locs,NoFrames,m=16):
 #%%
 def get_ac_fit(locs,NoFrames):
     # Get multiple tau autocorrelation
-    ac=get_ac(locs,NoFrames)
+    ac=get_ac(locs,NoFrames)[1:,:]
     # Define start parameters for fit
     p0=np.empty([2])
     p0[0]=ac[1,1] # Amplitude
@@ -94,7 +90,7 @@ def get_ac_fit(locs,NoFrames):
     upbounds=np.array([np.inf,np.inf])
     # Fit with monoexponential function
     try:
-        popt,pcov=scipy.optimize.curve_fit(fitfunc.ac_monoexp,ac[1:,0],ac[1:,1],p0,bounds=(lowbounds,upbounds),method='trf')
+        popt,pcov=scipy.optimize.curve_fit(fitfunc.ac_monoexp,ac[:,0],ac[:,1],p0,bounds=(lowbounds,upbounds),method='trf')
     except RuntimeError:
         popt=p0
     except ValueError:
@@ -102,14 +98,14 @@ def get_ac_fit(locs,NoFrames):
     except TypeError:
         popt=p0
         
-    chisquare=np.sum(np.square(np.divide(fitfunc.ac_monoexp(ac[1:,0],*popt)-ac[1:,1],popt[0]+1.)))/len(ac)
+    chisquare=np.sum(np.square(np.divide(fitfunc.ac_monoexp(ac[:,0],*popt)-ac[:,1],popt[0]+1.)))/(len(ac)-len(popt))
     popt=np.append(popt,np.sqrt(chisquare))
     return popt
 
 #%%
 def get_ac_fit_bi(locs,NoFrames):
     # Get multiple tau autocorrelation
-    ac=get_ac(locs,NoFrames)
+    ac=get_ac(locs,NoFrames)[1:,:]
     # Define start parameters for fit
     p0=np.empty([4])
     p0[0]=(ac[1,1]-1.)/2 # Amplitude short
@@ -122,11 +118,11 @@ def get_ac_fit_bi(locs,NoFrames):
     
     # Bounds for fit
     lowbounds=np.array([0,1.,0,1.])
-    upbounds=np.array([ac[1,1],np.inf,ac[1,1],np.inf])
+    upbounds=np.array([np.inf,np.inf,np.inf,np.inf])
     
     # Fit with monoexponential function, disregard
     try:
-        popt,pcov=scipy.optimize.curve_fit(fitfunc.ac_biexp,ac[1:,0],ac[1:,1],p0,bounds=(lowbounds,upbounds),method='trf')
+        popt,pcov=scipy.optimize.curve_fit(fitfunc.ac_biexp,ac[:,0],ac[:,1],p0,bounds=(lowbounds,upbounds),method='trf')
     except RuntimeError:
         popt=p0
     except ValueError:
@@ -134,7 +130,7 @@ def get_ac_fit_bi(locs,NoFrames):
     except TypeError:
         popt=p0
         
-    chisquare=np.sum(np.square(np.divide(fitfunc.ac_biexp(ac[1:,0],*popt)-ac[1:,1],popt[0]+popt[2]+1.)))/len(ac)
+    chisquare=np.sum(np.square(np.divide(fitfunc.ac_biexp(ac[:,0],*popt)-ac[:,1],popt[0]+popt[2]+1.)))/(len(ac)-len(popt))
     popt=np.append(popt,np.sqrt(chisquare))
     
     #Sort fit parameters
@@ -142,47 +138,15 @@ def get_ac_fit_bi(locs,NoFrames):
         popt[[0,1,2,3]]=popt[[2,3,0,1]] # Sort according to ascending tau_cs
         
     return popt
-#%%
-def get_ac_NoDocks(locs,NoFrames,p_inf_1):
-    # Get ac fit parameters
-    [G_0,tau_c,G_inf,chisquare]=get_ac_fit(locs,NoFrames)
-    # p_inf_N
-    p_inf_N=G_inf/G_0
-    # NoDocks
-    NoDocks=p_inf_N/p_inf_1[0]
-    # err_NoDocks
-    err_NoDocks=NoDocks*(p_inf_1[1]/p_inf_1[0])
-    return [NoDocks,err_NoDocks]
-   
-    #%%
-def get_misc_NoDocks(locs,NoFrames,ignore=1,**kwargs):
-    # Get ac fit parameters
-    [G_0,tau_c,chisquare]=get_ac_fit(locs,NoFrames)
-    # Get Picasso fit parameters
-    [n_events,tau_b_pi,tau_d_pi]=get_tau(locs,ignore,out='param',bright_ignore=True,fit='lin')
-    # Get tau_b by using misc terms G_0 and tau_d_pi
-    tau_b=tau_d_pi/G_0
-    tau_d=np.divide(tau_b*tau_c,tau_b-tau_c)
-#    tau_d=np.abs(tau_d)
-    NoDocks=tau_d/tau_d_pi
-    return [tau_b,tau_d,NoDocks]
-
-#%%
-def get_ac_tau(locs,NoFrames,NoDocks):
-    # Get ac fit parameters
-    [G_0,tau_c,chisquare]=get_ac_fit(locs,NoFrames)
-    # tau_b extracetd by ac
-    ac_tau_b=(1+1/(G_0*NoDocks))*tau_c
-    # tau_d extracetd by ac
-    ac_tau_d=(1+G_0*NoDocks)*tau_c
-    return [ac_tau_b,ac_tau_d]
-     
+    
 #%%
 def get_tau(locs,ignore=1,**kwargs):
+    # Sort locs to ascending frames
+    locs.sort(order=['frame'],axis=0)
     ################################################################ Get tau_d distribution
     dframes=locs['frame'][1:]-locs['frame'][0:-1] # Differentiate frames
     dframes=dframes.astype(float)
-    tau_d_dist=dframes[dframes>2] # Remove all dark frame-distances >2 (i.e. 1 dark frame between two bright frames neglected)
+    tau_d_dist=dframes[dframes>(ignore+1)] # Remove all dark frame-distances >2 (i.e. 1 dark frame between two bright frames neglected)
     tau_d_dist=np.sort(tau_d_dist) # Sorted tau_d distribution
     
     ################################################################# Get tau_b_distribution
@@ -284,12 +248,9 @@ def get_tau(locs,ignore=1,**kwargs):
 
 
 #%%
-def locs2groupprops(path,ignore_dark=1,**kwargs):
-    # Make sure that either NoDocks or p_inf_1 is in kwargs
-    assert len(kwargs)==1, "Pass either NoDocks or p_inf_1 to function"
+def locs2groupprops(path,ignore_dark=1):
     ############################## Read in locs_picked.hdf5 file generated by Picasso
     locs=fifo.read_locs(path)
-#    locs=locs[:][locs['frame']>999]
     # List of groups in locs
     group_list=np.unique(locs['group'])
     ############################## Read in locs_picked.yaml file generated by Picasso
@@ -309,11 +270,8 @@ def locs2groupprops(path,ignore_dark=1,**kwargs):
                                     ('n_locs','i4',1),('n_events','i4',1),('n_events_ignore','i4',1), # Statistics                                    
                                     ('tau_b','f4',1),('tau_b_ignore','f4',1),('tau_d','f4',1), # qPAINT dynamics
                                     ('tau_b_lin','f4',1),('tau_b_lin_ignore','f4',1),('tau_d_lin','f4',1), # qPAINT dynamics linearized
-                                    ('ac_A','f4',1),('ac_tau','f4',1),('ac_chisquare','f4',1), # ac fit mono
-                                    ('A1','f4',1),('tau1','f4',1),('A2','f4',1),('tau2','f4',1),('chisquare_bi','f4',1), # ac fit bi
-                                    ('ac_tau_b','f4',1),('ac_tau_d','f4',1), # ac dynamics
-                                    ('NoDocks','f4',1),('err_NoDocks','f4',1), # NoDocks with calibration
-                                    ('tau_b_misc','f4',1),('tau_d_misc','f4',1),('NoDocks_misc','f4',1)
+                                    ('mono_A','f4',1),('mono_tau','f4',1),('mono_chi','f4',1), # ac fit mono
+                                    ('A1','f4',1),('tau1','f4',1),('A2','f4',1),('tau2','f4',1),('bi_chi','f4',1) # ac fit bi
                                     ])
     # Assign groups
     groupprops['group'][:]=group_list
@@ -334,19 +292,16 @@ def locs2groupprops(path,ignore_dark=1,**kwargs):
         # Photons
         groupprops['mean_photons'][i]=get_mean_photons(locs_g)
         groupprops['std_photons'][i]=get_std_photons(locs_g)
-        
         # Old qPAINT dynamics
         # Binding times of 1 frame are not neglected in ECDF
         [n_events,tau_b,tau_d]=get_tau(locs_g,ignore_dark,out='param',bright_ignore=False,fit='exp')
         # Binding times of 1 frame are neglected in ECDF
         [n_events_ignore,tau_b_ignore,tau_d]=get_tau(locs_g,ignore_dark,out='param',bright_ignore=True,fit='exp')
-        
         # Linearized qPAINT dynamics
         # Binding times of 1 frame are not neglected in ECDF
         [n_events,tau_b_lin,tau_d_lin]=get_tau(locs_g,ignore_dark,out='param',bright_ignore=False,fit='lin')
         # Binding times of 1 frame are neglected in ECDF
         [n_events_ignore,tau_b_lin_ignore,tau_d_lin]=get_tau(locs_g,ignore_dark,out='param',bright_ignore=True,fit='lin')
-        
         # Statistics
         groupprops['n_locs'][i]=get_n_locs(locs_g)
         groupprops['n_events'][i]=n_events
@@ -359,44 +314,19 @@ def locs2groupprops(path,ignore_dark=1,**kwargs):
         groupprops['tau_b_lin'][i]=tau_b_lin
         groupprops['tau_b_lin_ignore'][i]=tau_b_lin_ignore
         groupprops['tau_d_lin'][i]=tau_d_lin
-        
         # ac fit mono
         [ac_A,ac_tau,ac_chisquare]=get_ac_fit(locs_g,NoFrames)
-        groupprops['ac_A'][i]=ac_A
-        groupprops['ac_tau'][i]=ac_tau
-        groupprops['ac_chisquare'][i]=ac_chisquare
+        groupprops['mono_A'][i]=ac_A
+        groupprops['mono_tau'][i]=ac_tau
+        groupprops['mono_chi'][i]=ac_chisquare
         # ac fit bi
         [A1,tau1,A2,tau2,chisquare_bi]=get_ac_fit_bi(locs_g,NoFrames)
         groupprops['A1'][i]=A1
         groupprops['tau1'][i]=tau1
         groupprops['A2'][i]=A2
         groupprops['tau2'][i]=tau2
-        groupprops['chisquare_bi'][i]=chisquare_bi
-        
-        [ac_A,ac_tau,ac_chisquare]=get_ac_fit(locs_g,NoFrames)
-        # ac dynamics
-        if 'p_inf_1' in kwargs:# Case: p_inf_1 is given 
-            [NoDocks,err_NoDocks]=get_ac_NoDocks(locs_g,NoFrames,kwargs['p_inf_1'])
-            groupprops['NoDocks'][i]=NoDocks
-            groupprops['err_NoDocks'][i]=err_NoDocks
-            mode='p_inf_1=[%e,%e]'%(kwargs['p_inf_1'][0],kwargs['p_inf_1'][1])
-        elif 'NoDocks' in kwargs: # Case: NoDocks is given
-            NoDocks=kwargs['NoDocks']
-            err_NoDocks=0
-            groupprops['NoDocks'][i]=NoDocks
-            groupprops['err_NoDocks'][i]=err_NoDocks
-            mode='NoDocks=%d'%(NoDocks)
-           
-        [ac_tau_b,ac_tau_d]=get_ac_tau(locs_g,NoFrames,NoDocks)
-        groupprops['ac_tau_b'][i]=ac_tau_b
-        groupprops['ac_tau_d'][i]=ac_tau_d
-        
-        # Mixed dynamics
-        [tau_b_misc,tau_d_misc,NoDocks_misc]=get_misc_NoDocks(locs_g,NoFrames,ignore_dark,bright_ignore=True,fit='lin')
-        groupprops['tau_b_misc'][i]=tau_b_misc
-        groupprops['tau_d_misc'][i]=tau_d_misc
-        groupprops['NoDocks_misc'][i]=NoDocks_misc
-        
+        groupprops['bi_chi'][i]=chisquare_bi        
+                
     # Save groupprops in hdf5 file
     groupprops_file = h5py.File(path.replace('.hdf5','_groupprops.hdf5'), "w")
     dset=groupprops_file.create_dataset("locs", np.shape(groupprops), dtype=groupprops.dtype)
@@ -404,72 +334,7 @@ def locs2groupprops(path,ignore_dark=1,**kwargs):
     groupprops_file.close() 
     
     # Create meta_dictionary to add to yaml file
-    ADDdict={'Generated by':'locs_groupprops.locs2groupprops','ignore_dark':ignore_dark,'mode':mode}
+    ADDdict={'Generated by':'locs_groupprops.locs2groupprops','ignore_dark':ignore_dark}
     fifo.create_meta_locs2groupprops(path,ADDdict)
-       
-    return groupprops
-
-#%%
-def sum2groupprops(path,NoDocks):
-    # Read in locs_picked.hdf5 file generated by Picasso
-    locs=fifo.read_sum(path)
-    # Read in locs_picked.yaml file generated by Picasso
-    # Get TIF and Localize meta-data
-    [TIFmeta,LOCmeta]=fifo.read_meta(path)
-    # Number of frames in .tif stack used by Picasso Localize
-    NoFrames=TIFmeta['Frames']
-    # List of groups in locs
-    group_list=np.unique(locs['n_id'])
-    # Initiate groupprops
-    groupprops=np.zeros(np.size(group_list),dtype=[('group','i4',1),
-                                    ('mean_x','f4',1),('std_x','f4',1),('mean_y','f4',1),('std_y','f4',1), # Location
-                                    ('mean_frame','f4',1),('std_frame','f4',1), # Frames
-                                    ('mean_photons','f4',1),('std_photons','f4',1), # Photons
-                                    ('ac_A','f4',1),('ac_tau','f4',1),('ac_offset','f4',1), # ac fit
-                                    ('ac_p_inf','f4',1),('ac_tau_b','f4',1),('ac_tau_d','f4',1),('NoDocks','f4',1) # ac dynamics
-                                    ])
-    # Assign groups
-    groupprops['group'][:]=group_list
-    
-    # Start loop over all groups
-    for i in tqdm(range(0,np.size(group_list))):
-        g=group_list[i]
-        locs_g=locs[:][locs['n_id']==g]
-        
-        #Location
-        groupprops['mean_x'][i]=get_mean_x(locs_g)
-        groupprops['std_x'][i]=get_std_x(locs_g)
-        groupprops['mean_y'][i]=get_mean_y(locs_g)
-        groupprops['std_y'][i]=get_std_y(locs_g)
-        #Frames
-        groupprops['mean_frame'][i]=get_mean_frame(locs_g)
-        groupprops['std_frame'][i]=get_std_frame(locs_g)
-        # Photons
-        groupprops['mean_photons'][i]=get_mean_photons(locs_g)
-        groupprops['std_photons'][i]=get_std_photons(locs_g)
-        
-        # ac fit
-        [ac_A,ac_tau,ac_offset]=get_ac_fit(locs_g,NoFrames)
-        groupprops['ac_A'][i]=ac_A
-        groupprops['ac_tau'][i]=ac_tau
-        groupprops['ac_offset'][i]=ac_offset
-        
-        # ac dynamics
-        [ac_p_inf,ac_tau_b,ac_tau_d]=get_ac_tau(locs_g,NoFrames,NoDocks)
-        groupprops['ac_p_inf'][i]=ac_p_inf
-        groupprops['ac_tau_b'][i]=ac_tau_b
-        groupprops['ac_tau_d'][i]=ac_tau_d
-        groupprops['NoDocks'][i]=NoDocks
-        
-        
-    # Save groupprops in hdf5 file
-    groupprops_file = h5py.File(path.replace('.hdf5','_groupprops.hdf5'), "w")
-    dset=groupprops_file.create_dataset("groupprops", np.shape(groupprops), dtype=groupprops.dtype)
-    dset[...]=groupprops
-    groupprops_file.close() 
-    
-    # Create meta_dictionary to add to yaml file
-    ADDdict={'Generated by':'locs_groupprops.sum2groupprops'}
-    fifo.create_meta_sum2groupprops(path,ADDdict)
        
     return groupprops

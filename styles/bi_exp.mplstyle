@@ -1,8 +1,7 @@
-
 figure.figsize:3.9,3.3
-figure.subplot.bottom: 0.2
-figure.subplot.top: 0.95
-figure.subplot.left: 0.2
+figure.subplot.bottom: 0.17
+figure.subplot.top: 0.8
+figure.subplot.left: 0.17
 figure.subplot.right: 0.97
 
 figure.edgecolor:white

@@ -69,17 +69,3 @@ def tau_c_of_conc(conc,koff,kon):
 def A_of_conc(conc,koff,kon,N):
     y=np.divide(koff,N*kon*conc)
     return y
-
-def gammainc_up(mu,x):
-    y=scipy.special.gamma(mu)*(1-scipy.special.gammainc(mu,x))
-    return y
-
-def poisson_continuous(x,mu):
-#    y=np.divide(gammainc_up(mu,x),scipy.special.gamma(x))
-    y=np.exp(x*np.log(mu)-mu-scipy.special.gammaln(x+1))
-    return y
-
-def poisson_continuous_cdf(x,mu):
-    y=np.divide(gammainc_up(mu,x),scipy.special.gamma(x))
-    
-    return y

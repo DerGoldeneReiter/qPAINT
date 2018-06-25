@@ -1,8 +1,7 @@
 # Template for creating iput variables
-# for locs_groupprops.locs2groupprops(path,ac_lastframe,ignore_dark)
+# for locs_groupprops.locs2groupprops(path,ignore_dark)
 # 
 #   path: List of full paths to grouped locs file ('*locs_picked.hdf5')
-#   ac_lastframe: List of last frames up to which autocorreleation function is usdeed for fit
 #   ignore_dark: List of how many pseudo dark frames are ignored equal to Picasso 
 #%%
 # Load modules
@@ -15,32 +14,22 @@ importlib.reload(l2grp)
 
 #%%
 # Define folder of locs_picked.hdf5 file
-dir_names=['/fs/pool/pool-schwille-paint/Data/Simulation/18-04-19_copasi_biexp/']
+dir_names=['/fs/pool/pool-schwille-paint/Data/D134/18-06-22/N12-3_10nM-P1modA_p30_T23_10MHz-g300_field1_1/18-06-22_FS/']
+#dir_names.extend([''])
 
 # Define names of locs_picked.hdf5 file
-file_names=['taub1s&taub5s_kon2e6_n12_c10nM_locs_picked.hdf5']
-#file_names.extend(['taub2s_kon2e6_n24_c10nM_locs_picked.hdf5'])
-#file_names.extend(['taub2s_kon2e6_n24_c20nM_locs_picked.hdf5'])
-#file_names.extend(['taub2s_kon2e6_n24_c50nM_locs_picked.hdf5'])
-#file_names.extend(['taub2s_kon2e6_n24_c100nM_locs_picked.hdf5'])
+file_names=['N12-3_10nM-P1modA_p30_T23_10MHz-g300_field1_1_MMStack_Pos0.ome_locs_picked.hdf5']
+#file_names.extend([''])
 
 # Create full path list
 path=[]
 for i in range(0, len(file_names)):
     path.append(os.path.join(dir_names[i],file_names[i]))
 
-# Possible locs2groupprops input arguments
-ignore_dark=[0]*5
-NoDocks=[12]*5
-# Load p_inf_1 calibration array
-#p_inf_1=np.load(r'E:\Flo\repos\qPAINT\scripts\analysis\18-01-04_OwnSimulation_Screening\p_inf_1.npy')
+# Ignore dark frames <=ignore_dark 
+ignore_dark=[1]*4
 
-
-#%%
 # Get group properties of all groups in locs by using module l2grp
-
 for i in range(0,np.size(path)):
-    groupprops=l2grp.locs2groupprops(path[i],ignore_dark[i],NoDocks=NoDocks[i])    
-
-#for i in range(0,np.size(path)):
-#    groupprops=l2grp.locs2groupprops(path[i],ignore_dark[i],p_inf_1=p_inf_1[i,:])       
+    groupprops=l2grp.locs2groupprops(path[i],ignore_dark[i])    
+     
