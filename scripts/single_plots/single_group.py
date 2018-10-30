@@ -16,9 +16,9 @@ plt.style.use('/fs/home/stehr/qPAINT/styles/FoM.mplstyle')
 #%%
 ######################################### Read in data
 # Define folder of locs_picked.hdf5 file
-dir_names=['/fs/pool/pool-schwille-paint/Data/D134/18-06-18/s02_P1modA+10nM_IS_10xtele_P15_exp50_fr30k_autofoc0_1/18-06-18_JS/'] # 100 nM
+dir_names=['/fs/pool/pool-schwille-paint/Data/D042/18-06-27_biexp/N12-3_align/']
 # Define names of locs_picked.hdf5 file
-file_names=['s02_P1modA+10nM_IS_10xtele_P15_exp50_fr30k_autofoc0_1_MMStack_Pos0.ome_locs_picked.hdf5']
+file_names=['12vs3_ac_picked.hdf5']
 
 path=os.path.join(dir_names[0],file_names[0])
 # read in locs files
@@ -28,14 +28,14 @@ NoFrames=fifo.read_meta(path)[0]['Frames']
 
 #%%
 ######################################### Select group
-g=3
+g=115
 locs_g=locs[:][locs['group']==g]
 
 ######################################### Parameters
 ignore_dark=1
 px2dist=160
-bright_ignore=True
-fit_mode='lin'
+bright_ignore=False
+fit_mode='exp'
 ########################################## Apply locs2groupprops module
 # Get tau dynamics according to Jungmann
 qTau=l2grp.get_tau(locs_g,ignore_dark,out='all',bright_ignore=bright_ignore,fit=fit_mode)
@@ -71,7 +71,7 @@ ax.plot(ac[1:,0],fitfunc.ac_monoexp(ac[1:,0],*popt_bi[2:4]),color='black',ls='--
 
 ax.set_xscale('log')
 ax.set_ylabel('G [a.u]')
-################################################################################ tau_d _ecdf linearized
+############################################################################### tau_d _ecdf linearized
 ax=f.add_subplot(3,2,3)
 ax.set_title(r'$\tau_d$ = '+'%.0f, '%(qTau['tau_d_mean'][0])+
              r'$n_{events}$ = '+'%.0i'%(qTau['n_events'][0]))
@@ -114,17 +114,20 @@ ax.set_xlabel('Frame')
 plt.show()
 
 
-#f=plt.figure(num=1)
-#f.clear()
-#ax=f.add_subplot(1,1,1)
-#ax.plot(ac[1:,0],ac[1:,1]/norm_factor,'bx',label='data')
-#ax.plot(ac[1:,0],fitfunc.ac_monoexp(ac[1:,0],*popt[0:3])/norm_factor,color='red',label='fit')
-#ax.set_xscale('log')
-#ax.set_xlim([0.5,float(NoFrames)-80580])
-#ax.set_ylim([0,1.1])
-#ax.set_ylabel('G [a.u.]')
-#ax.set_xlabel(r'$\tau$ [frames]')
-#ax.legend()
+f=plt.figure(num=1)
+f.clear()
+ax=f.add_subplot(1,1,1)
+CycleTime=0.05
+ax.plot(ac[1:,0]*CycleTime,ac[1:,1],'bx',label='data')
+ax.plot(ac[1:,0]*CycleTime,fitfunc.ac_monoexp(ac[1:,0],*popt[:-1]),color='red',label=r'$G_{mono}(\tau)$')
+# Test double exponential
+ax.plot(ac[1:,0]*CycleTime,fitfunc.ac_biexp(ac[1:,0],*popt_bi[:-1]),color='black',ls='-',label=r'$G_{bi}(\tau)$')
+ax.plot(ac[1:,0]*CycleTime,fitfunc.ac_monoexp(ac[1:,0],*popt_bi[0:2]),color='black',ls='--',label=r'$A_1 e^{\tau/\tau_1}+1$')
+ax.plot(ac[1:,0]*CycleTime,fitfunc.ac_monoexp(ac[1:,0],*popt_bi[2:4]),color='black',ls='--',label=r'$A_2 e^{\tau/\tau_2}+1$')
+ax.set_xscale('log')
+ax.set_xlabel(r'$\tau$ [s]')
+ax.set_ylabel(r'G ($\tau$) []')
+ax.legend(loc=1)
 
 #f=plt.figure(num=2)
 #f.clear()

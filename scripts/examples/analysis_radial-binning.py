@@ -13,25 +13,52 @@ import fitfunc
 # Reload modules
 importlib.reload(l2grp)
 importlib.reload(fitfunc)
-# Set plot style
-plt.style.use('classic')
+# Load style sheet for plots
+plt.style.use('~/qPAINT/styles/FoM.mplstyle')
 
 ###################################################Experimental settings
-CycleTime=[0.1]*4 # Aquisition cycle time [s]
+CycleTime=0.2 # Aquisition cycle time [s]
 # Define labels
-labels=['test']*3
-
-
+# Define labels
+labels=[]
+labels.extend(['flat @ 2.7mW'])
+labels.extend(['gauss @ 2.7mW'])
+labels.extend(['flat @ 5.5mW'])
+labels.extend(['gauss @ 5.5mW'])
+labels.extend(['flat @ 15.5mW'])
+labels.extend(['gauss @ 15.5mW'])
+labels.extend(['flat @ 35mW'])
+labels.extend(['gauss @ 35mW'])
+labels.extend(['flat @ 75.5mW'])
+labels.extend(['gauss @ 75.5mW'])
 ##################################################################################################### File read in
 # Define folder of locs.hdf5 file
 dir_names=[] 
-dir_names.extend(['/fs/pool/pool-schwille-paint/Data/D134/18-06-14/s02_10nM_IS+10xtele_P15_exp100_fr25k_noautofoc_1/18-06-15_JS/']) ##TRX/PCA/PCD
-#dir_names.extend(['/fs/pool/pool-schwille-paint/Data/D134/18-06-14/s01_10nM_OxCat+10xtele_P15_exp100_fr25k_noautofoc_1/18-06-15_JS/']) #CatOx autofoc off
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/D042/18-08-10_FlatGaussPower/id15-80_P1-Cy3b-4nM_p100mW-9deg_flat_1/18-08-10_FS'])
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/D042/18-08-10_FlatGaussPower/id15-80_P1-Cy3b-4nM_p100mW-9deg_gauss_1/18-08-10_FS'])
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/D042/18-08-10_FlatGaussPower/id15-80_P1-Cy3b-4nM_p100mW-11deg_flat_1/18-08-10_FS/'])
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/D042/18-08-10_FlatGaussPower/id15-80_P1-Cy3b-4nM_p100mW-11deg_gauss_1/18-08-10_FS/'])
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/D042/18-08-10_FlatGaussPower/id15-80_P1-Cy3b-4nM_p100mW-17deg_flat_1/18-08-10_FS/'])
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/D042/18-08-10_FlatGaussPower/id15-80_P1-Cy3b-4nM_p100mW-17deg_gauss_1/18-08-10_FS/'])
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/D042/18-08-10_FlatGaussPower/id15-80_P1-Cy3b-4nM_p100mW-25deg_flat_1/18-08-10_FS/'])
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/D042/18-08-10_FlatGaussPower/id15-80_P1-Cy3b-4nM_p100mW-25deg_gauss_1/18-08-10_FS/'])
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/D042/18-08-10_FlatGaussPower/id15-80_P1-Cy3b-4nM_p100mW-50deg_flat_1/18-08-10_FS/'])
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/D042/18-08-10_FlatGaussPower/id15-80_P1-Cy3b-4nM_p100mW-50deg_gauss_1/18-08-10_FS/'])
+
 
 # Define names of locs_picked.hdf5 file
 file_names=[] 
-file_names.extend(['s02_10nM_IS+10xtele_P15_exp100_fr25k_noautofoc_1_MMStack_Pos0.ome_locs_picked_groupprops.hdf5']) #TRX/PCA/PCD
-#file_names.extend(['s01_10nM_OxCat+10xtele_P15_exp100_fr25k_noautofoc_1_MMStack_Pos0.ome_locs_picked_groupprops.hdf5']) #CatOx autofoc off
+file_names.extend(['id15-80_P1-Cy3b-4nM_p100mW-9deg_flat_1_MMStack.ome_locs_picked_groupprops.hdf5']) 
+file_names.extend(['id15-80_P1-Cy3b-4nM_p100mW-9deg_gauss_1_MMStack.ome_locs_picked_groupprops.hdf5']) 
+file_names.extend(['id15-80_P1-Cy3b-4nM_p100mW-11deg_flat_1_MMStack.ome_locs_picked_groupprops.hdf5']) 
+file_names.extend(['id15-80_P1-Cy3b-4nM_p100mW-11deg_gauss_1_MMStack.ome_locs_picked_groupprops.hdf5']) 
+file_names.extend(['id15-80_P1-Cy3b-4nM_p100mW-17deg_flat_1_MMStack.ome_locs_picked_groupprops.hdf5']) 
+file_names.extend(['id15-80_P1-Cy3b-4nM_p100mW-17deg_gauss_1_MMStack.ome_locs_picked_groupprops.hdf5']) 
+file_names.extend(['id15-80_P1-Cy3b-4nM_p100mW-25deg_flat_1_MMStack.ome_locs_picked_groupprops.hdf5']) 
+file_names.extend(['id15-80_P1-Cy3b-4nM_p100mW-25deg_gauss_1_MMStack.ome_locs_picked_groupprops.hdf5'])
+file_names.extend(['id15-80_P1-Cy3b-4nM_p100mW-50deg_flat_1_MMStack.ome_locs_picked_groupprops.hdf5']) 
+file_names.extend(['id15-80_P1-Cy3b-4nM_p100mW-50deg_gauss_1_MMStack.ome_locs_picked_groupprops.hdf5'])
+
 
 # Create list of paths
 path=[]
@@ -42,22 +69,28 @@ for i in range(0,len(file_names)):
 groupprops_list=[]
 groupprops_list_filter=[]
 groupprops_list_filter_out=[]
-means=np.zeros([len(path),],dtype=fifo.read_groupprops(path[i]).dtype)
-stds=np.zeros([len(path),],dtype=fifo.read_groupprops(path[i]).dtype)
+means=np.zeros([len(path),],dtype=fifo.read_locs(path[i]).dtype)
+stds=np.zeros([len(path),],dtype=fifo.read_locs(path[i]).dtype)
 
+low_std_frame=[3100,3200,3200,3200,3200,3200,3200,3200,3000,2800]
+low_mean_frame=[5300,5300,5300,5300,5200,5200,5200,4700,4700,4000]
+up_mean_frame=[8000,7600,7600,7800,7700,7700,7700,7500,7800,8000]
+up_mono_chi=[0.035,0.035,0.035,0.035,0.035,0.035,0.035,0.035,0.035,0.035]
+up_mono_tau=[28,28,28,28,28,28,23,23,16,20]
 
 for p in range(0,len(path)):  
     ################# Unfiltered groupprops to list
-    groupprops=fifo.read_groupprops(path[p])# Single groupprops
+    groupprops=fifo.read_locs(path[p])# Single groupprops
     groupprops_list.append(groupprops)# List containing all groupprops arrays (unfiltered)
 
     ################# Set filters
     # Set single filters, always one single filter has to be active!
     istrue_single=[]
-    istrue_single.append(groupprops_list[p]['std_frame']>6800)
-    istrue_single.append(groupprops_list[p]['mean_frame']>1000)
-    istrue_single.append(groupprops_list[p]['mean_frame']<100000)
-#    istrue_single.append(groupprops_list[p]['mono_tau']<150) # Uncomment for usage
+    istrue_single.append(groupprops_list[p]['std_frame']>low_std_frame[p])
+    istrue_single.append(groupprops_list[p]['mean_frame']>low_mean_frame[p])
+    istrue_single.append(groupprops_list[p]['mean_frame']<up_mean_frame[p])
+    istrue_single.append(groupprops_list[p]['mono_chi']<up_mono_chi[p])
+    istrue_single.append(groupprops_list[p]['mono_tau']<up_mono_tau[p])
     # Combine single filters to overall filter (and not)
     istrue=np.all(istrue_single,axis=0)
     istrue_not=~np.array(istrue)
@@ -66,143 +99,104 @@ for p in range(0,len(path)):
     groupprops_list_filter.append(groupprops_list[p][:][istrue]) # Create list of filtered groupprops
     groupprops_list_filter_out.append(groupprops_list[p][:][istrue_not]) # Create list of out-filtered groupprops
     
-#    ################# Mean and std of all fields in filtered groupprops 
+    ################# Mean and std of all fields in filtered groupprops 
     for name in groupprops.dtype.names: 
-        means[name][p]=np.mean(groupprops_list_filter[p][name])
-        stds[name][p]=np.std(groupprops_list_filter[p][name])#/np.sqrt(len(groupprops_list_filter[p])) #Uncomment to switch between std and standard error of the mean
+        means[name][p]=np.nanmean(groupprops_list_filter[p][name])
+        stds[name][p]=np.nanstd(groupprops_list_filter[p][name])#/np.sqrt(len(groupprops_list_filter[p])) #Uncomment to switch between std and standard error of the mean
 
 ################################################### Show filtering   
-p=0
-#field='std_frame'
-#
+p=9
+field='mono_tau'
+
 #f=plt.figure(num=10)
 #f.clear()
 #ax=f.add_subplot(1,1,1)
 #ax.hist(groupprops_list_filter[p][field][:],bins='fd',label='p=%.0i, '%(p)+field)
 #ax.legend(loc=1)
 
-################################################### Radial& Intensity binning
-# enter laser power measured behind objective
-power=1.9e-3 # 20% 561 D134 [W]
-# enter pixel size 
-px_size=13e-6 # [m]
+################################################### Radial binning
 # Number of bins
-NoBins=12
+NoBins=5
+r0=[512,512]
 
-# parameters from Gaussian fit to laser intensity profile
-x_0=239.34 # profile center in x
-y_0=236.70 # profile center in y
-theta=43.76 # rotation angle (clockwise)
-sig_x=219.12/np.sqrt(2) # effective beam diameter in x
-sig_y=253.15/np.sqrt(2) # effective beam diameter in x
-
-popt_I=[1,x_0,y_0,sig_x,sig_y,theta,0]
-popt_I[0]=(2*power)/(np.pi*(np.mean(popt_I[3:4])*px_size*1e-2)**2)*1e-7 #[kW/cm^2]
-
-
-Sample_I_bin=np.empty([len(groupprops_list_filter),NoBins,1])
-I_bin=np.empty([len(groupprops_list_filter),NoBins,2])
-ac_tau_I_bin=np.empty([len(groupprops_list_filter),NoBins,2])
-ac_A_I_bin=np.empty([len(groupprops_list_filter),NoBins,2])
-tau_b_lin_I_bin=np.empty([len(groupprops_list_filter),NoBins,2])
-tau_d_lin_I_bin=np.empty([len(groupprops_list_filter),NoBins,2])
+n_groups_r_bin=np.empty([len(groupprops_list_filter),NoBins,1])
+mono_tau_r_bin=np.empty([len(groupprops_list_filter),NoBins,2])
+tau_b_r_bin=np.empty([len(groupprops_list_filter),NoBins,2])
+tau_d_r_bin=np.empty([len(groupprops_list_filter),NoBins,2])
 
 
 for p in range(0,len(groupprops_list)):
-    # Get intensity for every group
-    I=fitfunc.gaussian_2D((groupprops_list_filter[p]['mean_x'],groupprops_list_filter[p]['mean_y']),*popt_I)
+    # Get distance from center of illumination
+#    r=np.sqrt(np.power(groupprops_list_filter[p]['mean_x']-r0[0],2)+np.power(groupprops_list_filter[p]['mean_y']-r0[1],2))
+    r=(np.power(groupprops_list_filter[p]['mean_x']-r0[0],2)+np.power(groupprops_list_filter[p]['mean_y']-r0[1],2))
     # Bin Intensity in NoBins
-    bins_I=np.linspace(np.min(I),np.max(I),NoBins+1)
-    # Get groups in I according to binning
-    digitized_I=np.digitize(I,bins_I)
-    
-    Sample_I_bin[p,:,0] = np.array([len(digitized_I[digitized_I == i]) for i in range(1,NoBins+1)])
-    I_bin[p,:,0] = np.array([I[digitized_I == i].mean() for i in range(1, len(bins_I))])
-    I_bin[p,:,1] = np.array([I[digitized_I == i].std() for i in range(1, len(bins_I))])
-    
-    ac_tau_I_bin[p,:,0] = np.array([groupprops_list_filter[p]['ac_tau'][digitized_I == i].mean() for i in range(1, len(bins_I))])
-    ac_tau_I_bin[p,:,1] = np.array([groupprops_list_filter[p]['ac_tau'][digitized_I == i].std() for i in range(1, len(bins_I))])
-    ac_A_I_bin[p,:,0] = np.array([groupprops_list_filter[p]['ac_A'][digitized_I == i].mean() for i in range(1, len(bins_I))])
-    ac_A_I_bin[p,:,1] = np.array([groupprops_list_filter[p]['ac_A'][digitized_I == i].std() for i in range(1, len(bins_I))])    
-    tau_b_lin_I_bin[p,:,0] = np.array([groupprops_list_filter[p]['tau_b_lin'][digitized_I == i].mean() for i in range(1, len(bins_I))])
-    tau_b_lin_I_bin[p,:,1] = np.array([groupprops_list_filter[p]['tau_b_lin'][digitized_I == i].std() for i in range(1, len(bins_I))])
-    tau_d_lin_I_bin[p,:,0] = np.array([groupprops_list_filter[p]['tau_d_lin'][digitized_I == i].mean() for i in range(1, len(bins_I))])
-    tau_d_lin_I_bin[p,:,1] = np.array([groupprops_list_filter[p]['tau_d_lin'][digitized_I == i].std() for i in range(1, len(bins_I))])        
+    bins_r=np.linspace(0,470**2,NoBins+1)
+#    bins_r=np.array([100,150,200,300,400,500])
+    # Get groups in r according to binning
+    digitized_r=np.digitize(r,bins_r)
+    # Get number of groups in each bin 
+    n_groups_r_bin[p,:,0] = np.array([len(digitized_r[digitized_r == i]) for i in range(1, len(bins_r))])
+    # Get mean&std of mono_tau in each r-bin
+    mono_tau_r_bin[p,:,0] = np.array([groupprops_list_filter[p]['mono_tau'][digitized_r == i].mean() for i in range(1, len(bins_r))])
+    mono_tau_r_bin[p,:,1] = np.array([groupprops_list_filter[p]['mono_tau'][digitized_r == i].std() for i in range(1, len(bins_r))])
+    # Get mean&std of tau_b_lin_ignore in each r-bin
+    tau_b_r_bin[p,:,0] = np.array([groupprops_list_filter[p]['tau_b_ignore'][digitized_r == i].mean() for i in range(1, len(bins_r))])
+    tau_b_r_bin[p,:,1] = np.array([groupprops_list_filter[p]['tau_b_ignore'][digitized_r == i].std() for i in range(1, len(bins_r))])
+    # Get mean&std of tau_d_lin_ignore in each r-bin
+    tau_d_r_bin[p,:,0] = np.array([groupprops_list_filter[p]['n_events'][digitized_r == i].mean() for i in range(1, len(bins_r))])
+    tau_d_r_bin[p,:,1] = np.array([groupprops_list_filter[p]['n_events'][digitized_r == i].std() for i in range(1, len(bins_r))])      
     
 
 ################################################### Plotting
-#Define title for plots    
-title='T=23C, P=20%/1.9mW, 3x tele, 10nM P1modACy3B'
-#%%    
-################################################### ac_tau
+pltrange=[0,2,4,5,6,7,8,9]    
+################################################### mono_tau
 f=plt.figure(num=1)
 f.clear()
+f.subplots_adjust(bottom=0.1,left=0.13)
 ax=f.add_subplot(1,1,1)
 
 
-for p in range(0, len(groupprops_list)):
-    ax.errorbar(I_bin[p,:,0],ac_tau_I_bin[p,:,0]*CycleTime[p],yerr=np.divide(ac_tau_I_bin[p,:,1],np.sqrt(Sample_I_bin[p,:,0]))*CycleTime[p],label=labels[p])
+for p in pltrange:
+    x=np.sqrt(bins_r[1:])
+    y=mono_tau_r_bin[p,:,0]*CycleTime
+    yerr=np.divide(mono_tau_r_bin[p,:,1],np.sqrt(n_groups_r_bin[p,:,0]))*CycleTime
+    ax.errorbar(x,y,yerr=yerr,label=labels[p])
 
-ax.set_xscale('log')
-#ax.set_ylim([0,7])
+ax.set_xlabel(r'$r-r_{0}$ [px]')
+ax.set_ylabel(r'$\tau_c$ [s]')
+ax.legend(loc=4)
 
-ax.set_xlabel(r'Intensity $[kW/cm^2]$')
-ax.set_ylabel(r'ac_tau [s]')
-ax.set_title(title,fontsize=8)
-ax.legend()
-
-
-#%%    
-################################################### ac_A
+################################################### tau_b_lin_ignore
 f=plt.figure(num=2)
 f.clear()
+f.subplots_adjust(bottom=0.1,left=0.13)
 ax=f.add_subplot(1,1,1)
 
 
-for p in range(0, len(groupprops_list)):
-    ax.errorbar(I_bin[p,:,0],ac_A_I_bin[p,:,0],yerr=np.divide(ac_A_I_bin[p,:,1],np.sqrt(Sample_I_bin[p,:,0])),label=labels[p])
+for p in pltrange:
+    x=np.sqrt(bins_r[1:])
+    y=tau_b_r_bin[p,:,0]*CycleTime
+    yerr=np.divide(tau_b_r_bin[p,:,1],np.sqrt(n_groups_r_bin[p,:,0]))*CycleTime
+    ax.errorbar(x,y,yerr=yerr,label=labels[p])
 
-ax.set_xscale('log')
-#ax.set_ylim(ylim)
+ax.set_xlabel(r'$r-r_{0}$ [px]')
+ax.set_ylabel(r'$\tau_b$ [s]')
+ax.legend(loc=1)
 
-ax.set_xlabel(r'Intensity $[kW/cm^2]$')
-ax.set_ylabel(r'ac_A')
-ax.set_title(title,fontsize=8)
-ax.legend(loc=2)
-#%%    
-################################################### tau_b_lin
+################################################### tau_b_lin_ignore
+pltrange=[4,5]  
 f=plt.figure(num=3)
 f.clear()
+f.subplots_adjust(bottom=0.1,left=0.13)
 ax=f.add_subplot(1,1,1)
 
 
-for p in range(0, len(groupprops_list)):
-    ax.errorbar(I_bin[p,:,0],tau_b_lin_I_bin[p,:,0]*CycleTime[p],yerr=np.divide(tau_b_lin_I_bin[p,:,1],np.sqrt(Sample_I_bin[p,:,0]))*CycleTime[p],label=labels[p])
+for p in pltrange:
+    x=np.sqrt(bins_r[1:])
+    y=tau_d_r_bin[p,:,0]#*CycleTime
+    yerr=np.divide(tau_d_r_bin[p,:,1],np.sqrt(n_groups_r_bin[p,:,0]))#*CycleTime
+    ax.errorbar(x,y,yerr=yerr,label=labels[p])
 
-ax.set_xscale('log')
-#ax.set_ylim([0,7])
-
-ax.set_xlabel(r'Intensity $[kW/cm^2]$')
-ax.set_ylabel(r'tau_b_lin [s]')
-ax.set_title(title,fontsize=8)
-ax.legend()
-
-
-#%%    
-################################################### tau_d_lin
-f=plt.figure(num=4)
-f.clear()
-ax=f.add_subplot(1,1,1)
-
-
-for p in range(0, len(groupprops_list)):
-    ax.errorbar(I_bin[p,:,0],tau_d_lin_I_bin[p,:,0]*CycleTime[p],yerr=np.divide(tau_d_lin_I_bin[p,:,1]*CycleTime[p],np.sqrt(Sample_I_bin[p,:,0])),label=labels[p])
-
-ax.set_xscale('log')
-#ax.set_ylim(ylim)
-
-ax.set_xlabel(r'Intensity $[kW/cm^2]$')
-ax.set_ylabel(r'tau_d_lin [s]')
-ax.set_title(title,fontsize=8)
-ax.legend(loc=2)
-
+ax.set_xlabel(r'$r-r_{0}$ [px]')
+ax.set_ylabel(r'$\tau_d$ [s]')
+ax.legend(loc=1)

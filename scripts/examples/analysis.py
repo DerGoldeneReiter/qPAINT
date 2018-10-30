@@ -15,18 +15,18 @@ CycleTime=0.075 # Aquisition cycle time [s]
 # Define labels
 labels=(['6-3'])
 labels.extend(['3-3']) 
-#labels.extend(['']) # Extend for more labels
+
 
 ##################################################################################################### File read in
 # Define folder of locs.hdf5 file
-dir_names=['/fs/pool/pool-schwille-paint/Data/D134/18-06-24/N6-3_10nM-P1modA_p30_T23_10MHz-g300_field1_1/18-06-24_FS/']
+dir_names=[]
 dir_names.extend(['/fs/pool/pool-schwille-paint/Data/D134/18-06-24/N3-3_10nM-P1modA_p30_T23_10MHz-g300_field1_1/18-06-24_FS/'])
-#dir_names.extend(['']) # Extend for more directories
+
 
 # Define names of locs_picked.hdf5 file
-file_names=['N6-3_10nM-P1modA_p30_T23_10MHz-g300_field1_1_MMStack_Pos0.ome_locs_picked_groupprops.hdf5']
+file_names=[]
 file_names.extend(['N3-3_10nM-P1modA_p30_T23_10MHz-g300_field1_1_MMStack_Pos0.ome_locs_picked_groupprops.hdf5'])
-#file_names.extend(['']) # Extend for more directories
+
 
 # Create list of paths
 path=[]
@@ -37,12 +37,12 @@ for i in range(0,len(file_names)):
 groupprops_list=[]
 groupprops_list_filter=[]
 groupprops_list_filter_out=[]
-means=np.zeros([len(path),],dtype=fifo.read_groupprops(path[i]).dtype)
-stds=np.zeros([len(path),],dtype=fifo.read_groupprops(path[i]).dtype)
+means=np.zeros([len(path),],dtype=fifo.read_locs(path[i]).dtype)
+stds=np.zeros([len(path),],dtype=fifo.read_locs(path[i]).dtype)
 
 for p in range(0,len(path)):  
     ################# Unfiltered groupprops to list
-    groupprops=fifo.read_groupprops(path[p])# Single groupprops
+    groupprops=fifo.read_locs(path[p])# Single groupprops
     groupprops_list.append(groupprops)# List containing all groupprops arrays (unfiltered)
 
     ################# Set filters
