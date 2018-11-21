@@ -56,7 +56,7 @@ def get_trace(locs,NoFrames):
     # Define trace
     trace=np.zeros([1,NoFrames])
     # Add photons to trace for each frame
-    trace[0,locs['frame']]=locs['photons']
+    trace[0,locs['frame']]=np.absolute(locs['photons'])
     # Get unique frames and counts
     frames,frames_count=np.unique(locs['frame'],return_counts=True)
     # Frames with mutiple loaclizations
@@ -65,6 +65,7 @@ def get_trace(locs,NoFrames):
     for i in range(0,np.size(frames_multi)):
         trace[0,frames_multi[i]]=np.sum(locs['photons'][locs['frame']==frames_multi[i]])
     
+#    trace[0,:][trace[0,:]>0]=1
     return trace
 
 #%%
@@ -224,7 +225,8 @@ def get_tau(locs,ignore=1,**kwargs):
             tau_d_mean=p0_d
         except TypeError:
             tau_d_mean=p0_d
-            
+
+    
     # Output configuration
     try:
         if kwargs['out']=='param':

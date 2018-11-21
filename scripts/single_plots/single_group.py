@@ -12,30 +12,36 @@ import fitfunc
 importlib.reload(l2grp)
 importlib.reload(fitfunc)
 # Set plot style
-plt.style.use('/fs/home/stehr/qPAINT/styles/FoM.mplstyle')
+plt.style.use('~/qPAINT/styles/FoM.mplstyle')
+save_dir='/fs/pool/pool-schwille-paint/Analysis/p04.lb-FCS/18-10-19_PicassoSimulate-Experiment/'
 #%%
 ######################################### Read in data
 # Define folder of locs_picked.hdf5 file
-dir_names=['/fs/pool/pool-schwille-paint/Data/D042/18-06-27_biexp/N12-3_align/']
+dir_names=[]
+#dir_names.extend(['/fs/pool/pool-schwille-paint/Data/z.PAINT-checks/18-11-07_SDS_P1-9nt_noPur/Schueder_SDS_9nt_npPur_P1-20nM_p100mW-8deg_flat_1/18-11-07_FS/'])
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/z.simulations/18-11-15_JS_Picasso_Simulate/sds_surface_density/sds_kon8e5_koff2e-1_c20nM_18kfr/'])
 # Define names of locs_picked.hdf5 file
-file_names=['12vs3_ac_picked.hdf5']
-
+file_names=[]
+#file_names.extend(['Schueder_SDS_9nt_npPur_P1-20nM_p100mW-8deg_flat_1_MMStack.ome_locs_picked.hdf5'])
+file_names.extend(['sds_kon8e5_koff2e-1_c20nM_18kfr_locs_picked_diam10.hdf5'])
 path=os.path.join(dir_names[0],file_names[0])
 # read in locs files
 locs=fifo.read_locs(path)
+yaml=fifo.read_yaml(path)
 # Extract NoFrames from meta-data
-NoFrames=fifo.read_meta(path)[0]['Frames']
+NoFrames=fifo.read_yaml(path)[0]['Frames']
 
 #%%
 ######################################### Select group
-g=115
+g=147
 locs_g=locs[:][locs['group']==g]
+#locs_g=locs_g[locs_g['photons']>300]
 
 ######################################### Parameters
-ignore_dark=1
-px2dist=160
+ignore_dark=0
+px2dist=130
 bright_ignore=False
-fit_mode='exp'
+fit_mode='lin'
 ########################################## Apply locs2groupprops module
 # Get tau dynamics according to Jungmann
 qTau=l2grp.get_tau(locs_g,ignore_dark,out='all',bright_ignore=bright_ignore,fit=fit_mode)
@@ -113,47 +119,4 @@ ax.set_xlabel('Frame')
 
 plt.show()
 
-
-f=plt.figure(num=1)
-f.clear()
-ax=f.add_subplot(1,1,1)
-CycleTime=0.05
-ax.plot(ac[1:,0]*CycleTime,ac[1:,1],'bx',label='data')
-ax.plot(ac[1:,0]*CycleTime,fitfunc.ac_monoexp(ac[1:,0],*popt[:-1]),color='red',label=r'$G_{mono}(\tau)$')
-# Test double exponential
-ax.plot(ac[1:,0]*CycleTime,fitfunc.ac_biexp(ac[1:,0],*popt_bi[:-1]),color='black',ls='-',label=r'$G_{bi}(\tau)$')
-ax.plot(ac[1:,0]*CycleTime,fitfunc.ac_monoexp(ac[1:,0],*popt_bi[0:2]),color='black',ls='--',label=r'$A_1 e^{\tau/\tau_1}+1$')
-ax.plot(ac[1:,0]*CycleTime,fitfunc.ac_monoexp(ac[1:,0],*popt_bi[2:4]),color='black',ls='--',label=r'$A_2 e^{\tau/\tau_2}+1$')
-ax.set_xscale('log')
-ax.set_xlabel(r'$\tau$ [s]')
-ax.set_ylabel(r'G ($\tau$) []')
-ax.legend(loc=1)
-
-#f=plt.figure(num=2)
-#f.clear()
-#ax=f.add_subplot(1,1,1)
-#ax.plot(qTau['tau_d_bins'][0],-np.log(1-qTau['tau_d_cdf'][0]),'x',label='data')
-#ax.plot(qTau['tau_d_bins'][0],qTau['tau_d_bins'][0]/qTau['tau_d_mean'][0],label='fit')
-#ax.set_ylabel(r'-ln[1-ECDF($\tau_d$)]')
-#ax.set_xlabel('Time [frames]')
-#ax.legend(loc=2)
-#
-#f=plt.figure(num=3)
-#f.clear()
-#ax=f.add_subplot(1,1,1)
-#ax.plot(qTau['tau_b_bins'][0],-np.log(1-qTau['tau_b_cdf'][0]),'x',label='data')
-#ax.plot(qTau['tau_b_bins'][0],qTau['tau_b_bins'][0]/qTau['tau_b_mean'][0],label='fit')
-#ax.set_ylabel(r'-ln[1-ECDF($\tau_b$)]')
-#ax.set_xlabel('Time [frames]')
-#ax.legend(loc=2)
-#
-#f=plt.figure(num=4)
-#f.clear()
-#plt.subplots_adjust(left=0.2)
-#ax=f.add_subplot(1,1,1)
-#ax.plot(np.arange(0,NoFrames),trace[0,:]+6000,'b-')
-#ax.plot(np.arange(0,NoFrames),np.sign(np.float16(trace[0,:]))*5000,'r-')
-#ax.set_ylabel('Photons')
-#ax.set_xlabel('Time')
-#ax.set_xlim([1680,1865])
-#ax.set_ylim([-1000,19900])
+plt.savefig(save_dir+'PicassoSimulate.png',transparent=False)

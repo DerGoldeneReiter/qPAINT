@@ -1,6 +1,6 @@
-
 import numpy as np
 import warnings
+
 
 def autocorrelate(a, m=16, deltat=1, normalize=False,
                   copy=True, dtype=None):
