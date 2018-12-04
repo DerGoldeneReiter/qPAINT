@@ -17,7 +17,7 @@ def read_locs(readpath):
     locs_yaml : list
         list of dictionaries contained in .yaml corresponding to .hdf5 file
     """
-    with pd.HDFStore(readpath) as store:
+    with pd.HDFStore(readpath,'r') as store:
         locs=store['locs']
         
     ### Get corresponding .yaml file
@@ -47,8 +47,9 @@ def save_locs(df,df_dict,origin_path,savename_ext='_props'):
     ### Add savename_ext to path of original file that was processed to create savepath  
     savepath=origin_path.replace('.hdf5',savename_ext+'.hdf5')
     
-    with pd.HDFStore(savepath) as store:
-        store['locs']=df
+    with pd.HDFStore(savepath,'w') as store:
+#        store['locs']=df
+        store.put('locs', df, format='fixed')
     
     ### Save dict corresponding to processed df in .yaml
     create_yaml(df_dict,savepath.replace('.hdf5','.yaml'))

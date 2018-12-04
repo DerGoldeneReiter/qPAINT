@@ -4,7 +4,6 @@ import scipy.optimize
 import importlib
 import pandas as pd
 from tqdm import tqdm
-import dask.dataframe as dd
 # Import own modules
 import varfuncs
 importlib.reload(varfuncs)
@@ -57,7 +56,6 @@ def get_ac(df,NoFrames):
     trace=np.zeros(NoFrames)
     # Add (summed) photons to trace for each frame
     trace[df_sum.index.values]=df_sum['photons'].values
-    
     ###################################################### Generate autocorrelation
     ac=multitau.autocorrelate(trace,m=16, deltat=1,
                                  normalize=True,copy=False, dtype=np.float64())
@@ -271,25 +269,31 @@ def get_other(df):
         Column:
             'group' : int
         Index: 
-            'mean_frame' : flaot64
+            'mean_frame' : float64
                 Mean of frames for all localizations in group
-            'x' : float64
+            'mean_x' : float64
                 Mean x position
-            'y' : float64
+            'mean_y' : float64
                 Mean y position
             'mean_photons' : float64
                 Mean of photons for all localizations in group
+            'mean_bg' : float64
+                Mean background
             'std_frame' : flaot64
                 Standard deviation of frames for all localizations in group
+            'std_x' : float64
+                Standard deviation of x position
+            'std_y' : float64
+                Standard deviation of y position
             'std_photons' : flaot64
                 Standar deviation of photons for all localizations in group
     """
     # Get mean values
-    s_mean=df[['frame','x','y','photons']].mean()
-    mean_idx={'frame':'mean_frame','x':'x','y':'y','photons':'mean_photons'}
+    s_mean=df[['frame','x','y','photons','bg']].mean()
+    mean_idx={'frame':'mean_frame','x':'mean_x','y':'mean_y','photons':'mean_photons','mean_bg':'bg'}
     # Get std values
-    s_std=df[['frame','photons']].std()
-    std_idx={'frame':'std_frame','photons':'std_photons'}
+    s_std=df[['frame','x','y','photons']].std()
+    std_idx={'frame':'std_frame','x':'std_x','y':'std_y','photons':'std_photons'}
     # Combine output
     s_out=pd.concat([s_mean.rename(mean_idx),s_std.rename(std_idx)])
     
@@ -340,14 +344,22 @@ def apply_props(df,NoFrames,ignore):
 def apply_props_dask(df,NoFrames,ignore,NoPartitions): 
     """
     Applies pick_props.get_props(df,NoFrames,ignore) to each group in parallelized manner using dask by splitting df into 
-    various partitions. No progressbar is shown.
+    various partitions.
     """
+    ########### Load packages
+    import dask
+    import dask.multiprocessing
+    import dask.dataframe as dd
+    from dask.diagnostics import ProgressBar, Profiler, visualize
+    ########### Glaobally set dask scheduler to processes
+    dask.set_options(get=dask.multiprocessing.get)
     ########### Partionate df using dask for parallelized computation
     df=dd.from_pandas(df,npartitions=NoPartitions) 
     ########### Define apply_props for dask which will be applied to different partitions of df
     def apply_props_2part(df,NoFrames,ignore): return df.groupby('group').apply(lambda df: get_props(df,NoFrames,ignore))
-    ########### Map apply_props_2part to every partition of df for parallelized computing
-    df_props=df.map_partitions(apply_props_2part,NoFrames,ignore).compute(scheduler='processes')
+    ########### Map apply_props_2part to every partition of df for parallelized computing    
+    with ProgressBar():
+        df_props=df.map_partitions(apply_props_2part,NoFrames,ignore).compute()
     
     return df_props
 
