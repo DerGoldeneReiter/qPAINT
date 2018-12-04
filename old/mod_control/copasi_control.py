@@ -13,15 +13,10 @@ importlib.reload(simulate_locs)
 #%%
 # Define folder of locs_picked.hdf5 file
 dir_names=[]
-dir_names.extend(['/fs/pool/pool-schwille-paint/Data/Simulation/18-09-18_FS_copasi_bleaching/bright3-3s_kon1-5e6_c10nM/']*5)
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/Simulation/18-11-05_FS_copasi_SDSP1-9nt/'])
 # Define names of locs_picked.hdf5 file
 file_names=[]
-file_names.extend(['12.txt'])
-file_names.extend(['10.txt'])
-file_names.extend(['08.txt'])
-file_names.extend(['06.txt'])
-file_names.extend(['04.txt'])
-
+file_names.extend(['09k.txt'])
 
 # Create full path list
 path=[]
@@ -30,7 +25,7 @@ for i in range(0, len(file_names)):
 
 
 # Set number of intervals as defined in COPASI
-intervals=5000
+intervals=9000
 # Set interval_size as defined in COPASI
 interval_size=0.2
 

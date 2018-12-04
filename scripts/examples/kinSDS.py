@@ -19,23 +19,23 @@ field2='mono_A'
 
 ############################################################## Experimental ID, filter settings and save paths
 #### Working name for this evaluation
-expID='YourID'
+expID='Pm1-7nt'
 
-pre.loc[expID,'low_std_frame']=12e3
-pre.loc[expID,'low_mean_frame']=20e3
-pre.loc[expID,'up_mean_frame']=30e3
-pre.loc[expID,'up_mono_tau']=50
-pre.loc[expID,'up_mono_A']=8
-pre.loc[expID,'low_kde']=0.2
+pre.loc[expID,'low_std_frame']=10e3
+pre.loc[expID,'low_mean_frame']=15e3
+pre.loc[expID,'up_mean_frame']=36e3
+pre.loc[expID,'up_mono_tau']=28
+pre.loc[expID,'up_mono_A']=30
+pre.loc[expID,'low_kde']=0.25
 
 savepath='/fs/pool/pool-schwille-paint/Analysis/z.PAINT-checks/18-12-04_kinSDS_test'
 
 ############################################################## Define data paths
-dir_names=[]
-dir_names.extend(['/fs/pool/pool-schwille-paint/Data/z.PAINT-checks/18-11-27_Pm_Pmr_check_FSc/SDS-Pm2-8nt-2xT_Im-8nt-20nM_p100mW-9deg!!!/18-11-29_FS'])
+dir_names=[] 
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/z.PAINT-checks/18-11-27_Pm_Pmr_check_FSc/SDS-Pm1-7nt-2xT_Im-7nt-20nM_p100mW-9deg!!!/18-12-04_FS'])
 # Define names of locs_picked.hdf5 file
-file_names=[]
-file_names.extend(['SDS-Pm2-8nt-2xT_Im-8nt-20nM_p100mW-9deg_1_MMStack.ome_locs_render_picked_1985_d1_props-4.hdf5'])
+file_names=[] 
+file_names.extend(['SDS-Pm1-7nt-2xT_Im-7nt-20nM_p100mW-9deg_1_MMStack.ome_locs_render_picked9250_d1_props-4.hdf5'])
 
 ############################################################## Read in data and prep
 #### Create list of paths
@@ -72,7 +72,7 @@ X.loc[X.expID==expID,'tau_d_ac']=(X.mono_A+1)*(X.mono_tau)
 for i in results.index: results.loc[i,'mean']=X.loc[X.expID==expID,i].mean()
 for i in results.index: results.loc[i,'err_mean']=X.loc[X.expID==expID,i].std()/np.sqrt(len(X))
 del i
-results.to_csv(savepath+'/kinSDS_results.csv',index_label=expID)
+results.to_csv(os.path.join(savepath,'kinSDS_results.csv'),index_label=expID)
 ############################################################# Plot distributions
 #### Show effect of kde-filter in scatter plot
 f=plt.figure(num=1,figsize=[4,3])
@@ -83,11 +83,11 @@ plth=ax.scatter(X.loc[X.expID==expID,field1],X.loc[X.expID==expID,field2],c=X.lo
 plt.colorbar(plth)
 ax.set_xlabel(field1)
 ax.set_ylabel(field2)
-plt.savefig(savepath+'/kinSDS_scatter.png')
+plt.savefig(os.path.join(savepath,'kinSDS_scatter.png'))
 #### Show effect of kde-filter in histograms
 f=plt.figure(num=2,figsize=[8,4])
 f.subplots_adjust(top=0.93,bottom=0.06,left=0.055,right=0.995)
 ax=f.add_subplot(111)
 f.clear()
 X.loc[X.expID==expID,['std_frame','mean_frame','mono_tau','mono_A','mean_photons','bg','tau_b_ac','tau_d_ac']].hist(bins='fd',ax=ax,layout=(2,4))
-plt.savefig(savepath+'/kinSDS_hist.png')
+plt.savefig(os.path.join(savepath,'kinSDS_hist.png'))

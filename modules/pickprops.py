@@ -202,8 +202,8 @@ def get_tau(df,ignore=1):
         tau_d,tau_d_lin=fit_tau(tau_d_dist)
 
     ###################################################### Assignment to series 
-    s_out=pd.Series({'tau_b_dist':tau_b_dist,'tau_b':tau_b,'tau_b_lin':tau_b_lin, # Bright times
-                     'tau_d_dist':tau_d_dist,'tau_d':tau_d,'tau_d_lin':tau_d_lin, # Dark times
+    s_out=pd.Series({'tau_b_dist':tau_b_dist,'tau_b':tau_b,'tau_b_lin':tau_b_lin,'tau_b_mean':np.mean(tau_b_dist), # Bright times
+                     'tau_d_dist':tau_d_dist,'tau_d':tau_d,'tau_d_lin':tau_d_lin,'tau_d_mean':np.mean(tau_d_dist), # Dark times
                      'n_events':n_events,'mean_event_times':mean_event_times,'std_event_times':std_event_times}) # Events and timing
     return s_out    
 #%%     

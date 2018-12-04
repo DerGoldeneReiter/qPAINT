@@ -1,5 +1,7 @@
 import yaml
 import pandas as pd
+import h5py
+import numpy as np
 
 #%%
 def read_locs(readpath):
@@ -48,7 +50,6 @@ def save_locs(df,df_dict,origin_path,savename_ext='_props'):
     savepath=origin_path.replace('.hdf5',savename_ext+'.hdf5')
     
     with pd.HDFStore(savepath,'w') as store:
-#        store['locs']=df
         store.put('locs', df, format='fixed')
     
     ### Save dict corresponding to processed df in .yaml
@@ -102,5 +103,35 @@ def create_yaml(dict_list,savepath):
         for i in range(1,len(dict_list)): 
             yaml.dump(dict_list[i],yaml_file,default_flow_style=False,explicit_start=True)
         
+    return
+#%%
+def save_locs_recarray(rec,rec_dict,origin_path,savename_ext='_filter'):
+    """
+    Save processed rec of locs file belonging to origin_path in .hdf5 file and corresponding list of dictionaries in .yaml file.
+    
+    Parameters
+    ---------
+    rec: pandas.DataFrame
+        Processed df of a Picasso's locs file 
+    rec_dict: list(dict1,dict2,...)
+        List of dictionaries belonging to rec, will be stored in .yaml
+    origin_path : str
+        Path of original Picasso's locs file that was processed
+    savename_ext: str
+        Extension to origin_path, will be inserted right before file type extension '.hdf5'. If omitted defaults to '_filter'
+    """
+    ### Check if savename_ext is not an empty string to prevent replacing original container 
+    if savename_ext=='':
+        savename_ext='_XX'
+    ### Add savename_ext to path of original file that was processed to create savepath  
+    savepath=origin_path.replace('.hdf5',savename_ext+'.hdf5')
+    
+    with h5py.File(savepath,"w") as store:
+        dset=store.create_dataset("locs", np.shape(rec), dtype=rec.dtype)
+        dset[...]=rec
+    
+    ### Save dict corresponding to processed df in .yaml
+    create_yaml(rec_dict,savepath.replace('.hdf5','.yaml'))
+    
     return
 

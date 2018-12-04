@@ -19,15 +19,6 @@ def read_locs(path):
     
     return locs
 
-#%%
-def read_pickprops(path):
-    
-    pickprops_file=h5py.File(path,'r')
-    for name in pickprops_file: print(name)
-    pickprops=pickprops_file['groups'][...]
-    pickprops_file.close()
-    
-    return pickprops
 ############################################################### Save in hdf5-files
 #%%
 def save_locs(locs,path):

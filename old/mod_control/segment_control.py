@@ -12,10 +12,10 @@ importlib.reload(fifo)
 
 #%%
 # Define folder of locs_picked.hdf5 file
-dir_names=['/fs/pool/pool-schwille-paint/Data/D042/18-10-29_20nm9nt4nM_check/id15-8-_P1-9nt-4nM_p100mW-50deg_flat_1/18-10-30_JS/']
+dir_names=['/fs/pool/pool-schwille-paint/Data/p02.ds-bleaching/D042/18-11-13_p1Linker_OxCat/id15-80_P1-Linker-10nM_OxCat-p100mW-30d5deg_gauss_1/18-11-13_JS/18-11-15_FS/']
 
 # Define names of locs_picked.hdf5 file
-file_names=['id15-8-_P1-9nt-4nM_p100mW-50deg_flat_1_MMStack.ome_locs.hdf5']
+file_names=['id15-80_P1-Linker-10nM_OxCat-p100mW-30d5deg_gauss_1_MMStack.ome_locs_render_s1_picked_avg3_lineup.hdf5']
 
 # Create full path list
 path=[]
