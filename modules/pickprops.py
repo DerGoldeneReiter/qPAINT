@@ -100,7 +100,7 @@ def fit_ac_mono(ac):
     upbounds=np.array([np.inf,np.inf])
     ###################################################### Fit data
     try:
-        popt,pcov=scipy.optimize.curve_fit(varfuncs.ac_monoexp,ac[:,0],ac[:,1],p0,bounds=(lowbounds,upbounds),method='trf')
+        popt,pcov=scipy.optimize.curve_fit(varfuncs.ac_monoexp,ac[1:,0],ac[1:,1],p0,bounds=(lowbounds,upbounds),method='trf')
     except RuntimeError:
         popt=p0
     except ValueError:
@@ -354,6 +354,7 @@ def apply_props_dask(df,NoFrames,ignore,NoPartitions):
     ########### Glaobally set dask scheduler to processes
     dask.set_options(get=dask.multiprocessing.get)
     ########### Partionate df using dask for parallelized computation
+    df=df.set_index('group') # Set group as index otherwise groups will be split during partition!!!
     df=dd.from_pandas(df,npartitions=NoPartitions) 
     ########### Define apply_props for dask which will be applied to different partitions of df
     def apply_props_2part(df,NoFrames,ignore): return df.groupby('group').apply(lambda df: get_props(df,NoFrames,ignore))
