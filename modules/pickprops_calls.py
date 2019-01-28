@@ -1,6 +1,7 @@
 # Import modules
 import numpy as np
 import pandas as pd
+import importlib
 
 #%%
 def group_groups(df,supsize,mode='concat'):
@@ -53,6 +54,32 @@ def group_groups(df,supsize,mode='concat'):
    
     return df_out
 
-
-
+#%%
+def segment_time(path,noFrames_seg):
+    
+    #### Load modules
+    import var_io
+    importlib.reload(var_io)
+    
+    #### Load locs and yaml
+    locs,meta=var_io.read_locs(path)
+    noFrames=meta[0]['Frames'] # Number of frames in locs
+    #### Define time segments
+    noSegments=np.floor(noFrames/noFrames_seg).astype(int) # no. of segments
+    start_frame=[i*noFrames_seg for i in range(0,noSegments)] # start frames of new segments
+    end_frame=[i*noFrames_seg for i in range(1,noSegments+1)] # end frames of new segment
+    #### Assign noFrames_new to meta_seg for saving
+    meta_seg=meta
+    meta_seg[0]['Frames']=noFrames_seg
+    
+    #### Split locs file according to time segments
+    for i in range(0,noSegments):
+        print('_%i_of_%i'%(i+1,noSegments))
+        #### Split locs
+        locs_seg=locs.loc[(locs.frame>=start_frame[i])&(locs.frame<end_frame[i])]
+        #### Substract start_frame
+        locs_seg.loc[:,'frame']=locs_seg.loc[:,'frame'].values-start_frame[i]
+        var_io.save_locs(locs_seg,meta_seg,path,savename_ext='_%i_of_%i'%(i+1,noSegments))
+        
+    return 
 

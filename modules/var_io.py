@@ -71,6 +71,7 @@ def read_yaml(readpath):
     dict_list: list(dict)
         List of dictionaries in .yaml file
     """
+    
     stream=open(str.replace(readpath,'.hdf5','.yaml'))
     doc=yaml.load_all(stream)
     

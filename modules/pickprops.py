@@ -65,7 +65,7 @@ def get_ac(df,NoFrames):
     
     ###################################################### Assignment to series 
     s_out=pd.Series({'trace':trace,
-                     'tau':ac[:,0],'g':ac[:,1], # Autocorrelation function
+                     'tau':ac[1:-15,0],'g':ac[1:-15,1], # Autocorrelation function
                      'mono_A':mono_A,'mono_tau':mono_tau,'mono_chi':mono_chi}) # mono exponential fit results
     
     return s_out
@@ -100,7 +100,7 @@ def fit_ac_mono(ac):
     upbounds=np.array([np.inf,np.inf])
     ###################################################### Fit data
     try:
-        popt,pcov=scipy.optimize.curve_fit(varfuncs.ac_monoexp,ac[1:,0],ac[1:,1],p0,bounds=(lowbounds,upbounds),method='trf')
+        popt,pcov=scipy.optimize.curve_fit(varfuncs.ac_monoexp,ac[1:-15,0],ac[1:-15,1],p0,bounds=(lowbounds,upbounds),method='trf')
     except RuntimeError:
         popt=p0
     except ValueError:
