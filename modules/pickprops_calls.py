@@ -4,56 +4,131 @@ import pandas as pd
 import importlib
 
 #%%
-def group_groups(df,supsize,mode='concat'):
+def combine_picks(path_locs,path_props,N,q=3,compress=True):
+    """ 
+    Combines N picks of picasso '_picked' file into single pick.
+        1) Standardized filter (using quantiles on distributions) is applied to corresponding '_picked_props' file.
+           Just remaining picks will be combined.
+        2) Combined groups are saved with extension '_picked_stackN' and meta with paramters is saved in yaml keeping original yaml information from '_picked' file. 
     
-    import multitau
-    import pickprops as props
-    
-    #### Function definitions 
-    def concat_groups_kinetics(df):
-        s_out=pd.Series({i:np.hstack(df[i].values) for i in df.columns})
-        #### Drop 'sup_group'
-        s_out=s_out.drop('sup_group')
+    Parameters
+    ---------
+    path_locs : str
+        Path to '_picked' file
+    path_props : str
+        Path to '_picked_props' file
+    N: int
+        N picks will be combined into single pick
+    q: float [%]
+        Upper (100-q) and lower (q) quantile of following distributions of '_picked_props' are dropped. 
+            'mean frame': Lower and upper quantile will be dropped
+            'std_frame': Lower quantile will be dropped
+            'mono_chi' & 'mono_tau': upper quantile will be dropped
+    compress: bool
+        If true all photon values of '_picked' file will be set to mean photon value to avoid addition of noise, that may affect autocorrelation 
+    Returns
+    -------
+    locs_combine: pandas.DataFrame
         
-        #### Apply AC functions
-        ac=multitau.autocorrelate(s_out['trace'],m=16, deltat=1,
-                                 normalize=True,copy=False, dtype=np.float64())
-        mono_A,mono_tau,mono_chi=props.fit_ac_mono(ac) # Get fit
-        
-        #### Apply ECDF functions
-        tau_b,tau_b_lin=props.fit_tau(s_out['tau_b_dist'])
-        tau_d,tau_d_lin=props.fit_tau(s_out['tau_d_dist'])
-        
-        #### Assign new values
-        s_out['tau']=ac[:,0]
-        s_out['g']=ac[:,1]
-        s_out['mono_A']=mono_A
-        s_out['mono_tau']=mono_tau
-        
-        s_out['tau_b']=tau_b
-        s_out['tau_b_lin']=tau_b_lin
-        s_out['tau_d']=tau_d
-        s_out['tau_d_lin']=tau_d_lin
-        
-        return s_out  
-    
-    #### Create sup-group index. Partionate groups into sup_groups of size=supsize. 
-    #### Sup-group index will start with 1. Last group
-    N=len(df)
-    sup_groups=np.repeat(np.arange(1,int(N/supsize)+1),supsize)
-    #### Assing group index of zero to remaining groups
-    sup_groups.resize(N)
-    
-    #### Copy part of df and add sup-groups column, remove sup_groups samller tha required size
-    df_sup=df[['group','trace','tau_b_dist','tau_d_dist']]
-    df_sup['sup_group']=sup_groups
-    df_sup=df_sup[df_sup['sup_group']>0]
-    
-    #### Apply functions
-    df_out=df_sup.groupby('sup_group').apply(concat_groups_kinetics)
-   
-    return df_out
 
+    """
+    ############################################################# Definitions and modules
+    import var_io
+    from tqdm import tqdm
+    
+    def map_groups(df,group_map):
+        isin=(group_map[:,0]==df.group.unique())#.any()
+    
+        try: 
+            df.loc[:,'group']=group_map[isin,1]
+        except ValueError:
+            df.loc[:,'group']=0
+        
+        return df
+    ############################################################# File read-in
+    print('File read in ...')
+    #### Read in '_picked' file
+    locs,meta_locs=var_io.read_locs(path_locs)
+    #### Bring all localizations to same photon level to avoid addition of noise
+    if compress:
+        locs.loc[:,'photons']=locs.photons.mean()
+    #### Read in '_picked_props' file
+    props,meta_props=var_io.read_locs(path_props)
+    
+    ############################################################# Pre-filter
+    #### Copy props to X for filtering
+    X=props.copy()
+    #### Reset index
+    X.reset_index(inplace=True)
+    #### General mono_tau filter
+    X.drop(X[X.mono_tau>40].index,inplace=True)
+    X.drop(X[X.mono_tau<8].index,inplace=True)
+    
+    ############################################################# Quantiles filter
+    print('Filter ...')
+    #### Used fields for filtering
+    fields=['std_frame','mean_frame',
+            'mono_tau','mono_chi']
+    #### Apply quantile filter
+    for f in fields:
+        #### Calculate lower and upper quantile for fields in X
+        low_cut=np.percentile(X.loc[:,f],q)
+        high_cut=np.percentile(X.loc[:,f],100-q)
+        
+        #### Indices with entries lower than low_cut
+        istrue_lower=X.loc[X.loc[:,f]<low_cut].index
+        #### Indices with entries higher than high_cut
+        istrue_higher=X.loc[X.loc[:,f]>high_cut].index
+        
+        #### Remove entries from X
+        if (f=='mean_frame'):
+            X.drop(istrue_higher,inplace=True)
+            X.drop(istrue_lower,inplace=True)
+        elif (f=='std_frame'):
+            X.drop(istrue_lower,inplace=True)
+        elif (f=='mono_chi')|(f=='mono_tau'):
+            X.drop(istrue_higher,inplace=True)
+    
+    #### Show effect of filter in histogram
+    
+    ############################################################# Combine remaining groups in '_picked'
+    print('Combining groups ...')
+    #### Get remaining groups
+    groups=X.group.unique()
+    groupsL=len(groups)
+    #### Combined group IDs
+    combinedN=np.floor(groupsL/N).astype(int) # Number of combined groups
+    combined=np.array([[i]*N for i in range(1,combinedN+1)]).flatten() # Combined group IDs
+    #### Map original to combined groups
+    groups_map=np.zeros([groupsL,2])
+    groups_map[:,0]=groups
+    groups_map[0:combinedN*N,1]=combined
+    #### Remove remaining groups that do not fit in combined groups (zero entries)
+    groups_map=groups_map[groups_map[:,1]>0,:] 
+    #### Combine groups
+    tqdm.pandas()
+    locs_combine=locs.groupby('group').progress_apply(lambda df: map_groups(df,groups_map))
+    #### Remove group=0 (filtered out) from locs_combine
+    locs_combine.drop(locs_combine[locs_combine.group==0].index,inplace=True)
+    
+    ############################################################# Save files
+    print('Saving ...')
+    meta_combine=meta_locs
+    ADDdict={'Generated by':'pickprops_calls.combine_picks.py',
+             'N': N,
+             'q': q}
+    meta_combine.extend([ADDdict])
+    #### Add different file ending if compressed or not
+    if compress:
+        savename_ext='_stack%i_compress'%(N)
+    else:
+        savename_ext='_stack%i'%(N)
+        
+    var_io.save_locs(locs_combine,meta_combine,path_locs,savename_ext=savename_ext)
+    
+    return locs_combine,meta_combine
+    
+    
 #%%
 def segment_time(path,noFrames_seg):
     
@@ -83,3 +158,145 @@ def segment_time(path,noFrames_seg):
         
     return 
 
+#%%
+def tile_locs(path,noTiles,center,width):
+    """ 
+    Assigns group index to quadratic ROIs (tiles) of picasso _locs file. 
+        1) locs are cropped to region of width 'width' in both x&y direction centered around 'center'
+        2) Cropped region is split into tiles. Number of tiles is given by square of 'noTiles'.
+        3) group index will be assigned to locs file according to tiles and locs_picked is returned and saved.
+            -> For noTiles=2 indexing looks like this
+            ______________
+            |      |     |
+            |  2   |  3  |
+            |______|_____|
+            |      |     |
+            |  0   |  1  |
+            |______|_____|
+        4) Tiled file is saved with extension '_picked_tile' and meta with containing paramters is saved in yaml keeping original yaml information
+            
+    Parameters
+    ---------
+    path : str
+        Path to _locs file
+    NoTiles : int
+        Number of tiles (in one dimension)
+    center: list
+        [x,y] in px as center for cropped region
+    width: float
+        Full width of cropped region
+    
+    Returns
+    -------
+    locs_picked : pandas.DataFrame
+        Cropped _locs file with group index assigned according to tiles
+
+    """
+    
+    #### Load modules
+    import var_io
+    importlib.reload(var_io)
+    
+    #### Load locs and yaml
+    locs,meta=var_io.read_locs(path)
+       
+    #### Restrict locs to centered 512x512px ROI
+    istrue_x=np.absolute(locs.x-center[0])>width/2
+    istrue_y=np.absolute(locs.y-center[1])>width/2
+    istrue_xy=istrue_x|istrue_y
+    locs.drop(locs[istrue_xy].index,inplace=True)
+    #### Substract boarder x-y values
+    locs.loc[:,'x']=locs.loc[:,'x']-(center[0]-width/2)
+    locs.loc[:,'y']=locs.loc[:,'y']-(center[1]-width/2)
+    #### Define tiles
+    tile_width=width/noTiles
+    #### x-column ranges
+    low_x=np.array([i*tile_width for i in range(0,noTiles)])
+    up_x=np.array([i*tile_width for i in range(1,noTiles+1)])
+    #### y-row ranges
+    low_y=np.array([i*tile_width for i in range(0,noTiles)])
+    up_y=np.array([i*tile_width for i in range(1,noTiles+1)])  
+    #### Assing group index according to tiles
+    group_index=0
+    for j in range(0,noTiles): # loop through y-row
+        istrue_y=(locs.y>low_y[j])&(locs.y<up_y[j])
+        for i in range(0,noTiles): # loop through x-row
+            print('Tile %i'%(group_index))
+            istrue_x=(locs.x>low_x[i])&(locs.x<up_x[i])
+            #### Intersection of x&y-stripe gives tile
+            istrue_tile=istrue_x&istrue_y
+            #### Assign group index to tile
+            locs.loc[istrue_tile,'group']=group_index
+            #### Raise group index by one for next tile
+            group_index+=1
+            
+     #### Save file
+    meta_tile=meta
+    ADDdict={'Generated by':'pickprops_calls.tile_locs.py',
+             'center of ROI':center,
+             'full width of ROI':width,
+             'number of tiles per row-column':noTiles}
+    meta_tile.extend([ADDdict])
+    var_io.save_locs(locs,meta_tile,path,savename_ext='_picked_tile')   
+            
+    return locs
+
+#%%
+def props_add_nn(path):
+    """ 
+    Assigns group index to quadratic ROIs (tiles) of picasso _locs file. 
+           
+    Parameters
+    ---------
+    path : str
+        path to _props file as generated by modules/pickprops.py from picasso locs_picked file
+    
+    Returns
+    -------
+    loc_props : pandas.DataFrame
+        Original DataFrame as in 'path' but with nearest neigbour distance (px) as column 'nn'.
+
+    """
+    
+    #### Load modules
+    import var_io
+    importlib.reload(var_io)
+    from tqdm import tqdm
+    
+    #### Function definitions 
+    #### Calculate minimal radial distance of group to all neigbours
+    def get_nn(df,x,y,group_ids):
+        #### Coordinates and id of reference group
+        x0=df.mean_x.values # x-coordinate
+        y0=df.mean_y.values # y coordinate
+        
+        #### Get nearest neighbour
+        r=np.sqrt((x-x0)**2+(y-y0)**2) # Radial distance
+        nn_index=np.argmin(r[r>0]) # Get minimum except distance to itself
+        nn=group_ids[r>0][nn_index] # id of neareast neighbour
+        nn_r=r[r>0][nn_index]
+        
+        #### Assign to output
+        df['nn']=nn
+        df['nn_r']=nn_r
+        return df
+    
+    #### Load locs and yaml
+    df,meta=var_io.read_locs(path)
+    #### reset index to get 'group' column
+    df.reset_index(inplace=True)
+    #### Get coordinates of all groups in df and ids
+    x=df.mean_x.values
+    y=df.mean_y.values
+    group_ids=df.group.values
+    #### Apply get_nn
+    tqdm.pandas() # For progressbar under apply
+    df_nn=df.groupby('group').progress_apply(lambda df: get_nn(df,x,y,group_ids))
+    
+    #### Save file
+    meta_tile=meta
+    ADDdict={'Generated by':'pickprops_calls.props_add_nn.py'}
+    meta_tile.extend([ADDdict])
+    var_io.save_locs(df_nn,meta_tile,path,savename_ext='_nn')
+    
+    return df_nn
