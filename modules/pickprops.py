@@ -63,10 +63,14 @@ def get_ac(df,NoFrames):
     ###################################################### Fit mono exponential decay to autocorrelation
     mono_A,mono_tau,mono_chi=fit_ac_mono(ac) # Get fit
     
+    ###################################################### Calculate tau_b, tau_d from mono, just valid for N=1
+    mono_taub=(mono_A+1)*(mono_tau/mono_A)
+    mono_taud=(mono_A+1)*(mono_tau)
     ###################################################### Assignment to series 
     s_out=pd.Series({'trace':trace,
                      'tau':ac[1:-15,0],'g':ac[1:-15,1], # Autocorrelation function
-                     'mono_A':mono_A,'mono_tau':mono_tau,'mono_chi':mono_chi}) # mono exponential fit results
+                     'mono_A':mono_A,'mono_tau':mono_tau,'mono_chi':mono_chi, # mono exponential fit results
+                     'mono_taub':mono_taub,'mono_taud':mono_taud}) # tau_b, tau_d for mono just valid for N=1
     
     return s_out
 
@@ -183,8 +187,6 @@ def get_tau(df,ignore=1):
     ################################################################# Number of events and their timing
     n_events=float(np.size(tau_b_dist)) # Number of binding events
     event_times=(frames_start+frames_end)/2 # Events time distribution over trace
-    mean_event_times=np.mean(event_times) # Get mean of event times
-    std_event_times=np.std(event_times) # Get std fo event times
 
     ################ Extract tau's
     if n_events<=5: # If n_events <= 5 --> Set all parameters to mean of distribution
@@ -204,7 +206,7 @@ def get_tau(df,ignore=1):
     ###################################################### Assignment to series 
     s_out=pd.Series({'tau_b_dist':tau_b_dist,'tau_b':tau_b,'tau_b_lin':tau_b_lin,'tau_b_mean':np.mean(tau_b_dist), # Bright times
                      'tau_d_dist':tau_d_dist,'tau_d':tau_d,'tau_d_lin':tau_d_lin,'tau_d_mean':np.mean(tau_d_dist), # Dark times
-                     'n_events':n_events,'mean_event_times':mean_event_times,'std_event_times':std_event_times}) # Events and timing
+                     'n_events':n_events}) # Events
     return s_out    
 #%%     
 def fit_tau(tau_dist):
@@ -285,11 +287,15 @@ def get_other(df):
                 Standard deviation of x position
             'std_y' : float64
                 Standard deviation of y position
-            'std_photons' : flaot64
-                Standar deviation of photons for all localizations in group
+            'std_photons' : float64
+                Standard deviation of photons for all localizations in group
+            'n_locs' : int
+                Number of localizations in group
     """
     # Get mean values
     s_mean=df[['frame','x','y','photons','bg']].mean()
+    # Get number of localizations
+    s_mean['n_locs']=len(df)
     mean_idx={'frame':'mean_frame','x':'mean_x','y':'mean_y','photons':'mean_photons','mean_bg':'bg'}
     # Get std values
     s_std=df[['frame','x','y','photons']].std()
@@ -331,17 +337,18 @@ def get_props(df,NoFrames,ignore):
     return s_out
 
 #%%
-def apply_props(df,NoFrames,ignore): 
+def apply_props(df,conc,NoFrames,ignore): 
     """
     Applies pick_props.get_props(df,NoFrames,ignore) to each group in non-parallelized manner. Progressbar is shown under calculation.
     """
     tqdm.pandas() # For progressbar under apply
     df_props=df.groupby('group').progress_apply(lambda df: get_props(df,NoFrames,ignore))
+    df_props['conc']=conc
     
     return df_props
 
 #%%
-def apply_props_dask(df,NoFrames,ignore,NoPartitions): 
+def apply_props_dask(df,conc,NoFrames,ignore,NoPartitions): 
     """
     Applies pick_props.get_props(df,NoFrames,ignore) to each group in parallelized manner using dask by splitting df into 
     various partitions.
@@ -361,7 +368,7 @@ def apply_props_dask(df,NoFrames,ignore,NoPartitions):
     ########### Map apply_props_2part to every partition of df for parallelized computing    
     with ProgressBar():
         df_props=df.map_partitions(apply_props_2part,NoFrames,ignore).compute()
-    
+    df_props['conc']=conc
     return df_props
 
 

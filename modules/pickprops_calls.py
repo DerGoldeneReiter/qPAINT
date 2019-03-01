@@ -244,7 +244,7 @@ def tile_locs(path,noTiles,center,width):
 #%%
 def props_add_nn(path):
     """ 
-    Assigns group index to quadratic ROIs (tiles) of picasso _locs file. 
+    Adds nearest neighbouring group to _props file and saves it with file extension '_nn' 
            
     Parameters
     ---------

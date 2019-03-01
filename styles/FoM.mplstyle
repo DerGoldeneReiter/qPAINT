@@ -23,7 +23,7 @@ axes.labelsize:13
 axes.labelcolor:black
 
 
-axes.prop_cycle: cycler('color', ['gray','darkred','g','m','y'])
+axes.prop_cycle: cycler('color', ['black','green','blue','red','magenta','yellow','gray'])
 xtick.color:black
 ytick.color:black
 ytick.minor.visible: False
@@ -39,5 +39,5 @@ legend.facecolor: None
 legend.edgecolor: None
 
 figure.dpi:100
-savefig.dpi:1200
+savefig.dpi:300
 savefig.transparent:True
