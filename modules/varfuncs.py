@@ -79,11 +79,11 @@ def tauc_of_c(c,koff,kon):
     tauc=1/(koff+kon*c)
     return tauc
 
-def Ainv_of_c(c,slope,offset):
+def Ainv_of_c(c,slope,offset=0.):
     Ainv=slope*c+offset
     return Ainv
 
-def taudinv_of_c(c,slope,offset):
+def taudinv_of_c(c,slope,offset=0.):
     taudinv=slope*c+offset
     return taudinv
 

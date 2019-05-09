@@ -62,7 +62,7 @@ def get_ac(df,NoFrames):
     
     ###################################################### Fit mono exponential decay to autocorrelation
     mono_A,mono_tau,mono_chi=fit_ac_mono(ac) # Get fit
-    
+    mono_A_lin,mono_tau_lin=fit_ac_mono_lin(ac) # Get fit
     ###################################################### Calculate tau_b, tau_d from mono, just valid for N=1
     mono_taub=(mono_A+1)*(mono_tau/mono_A)
     mono_taud=(mono_A+1)*(mono_tau)
@@ -70,7 +70,8 @@ def get_ac(df,NoFrames):
     s_out=pd.Series({'trace':trace,
                      'tau':ac[1:-15,0],'g':ac[1:-15,1], # Autocorrelation function
                      'mono_A':mono_A,'mono_tau':mono_tau,'mono_chi':mono_chi, # mono exponential fit results
-                     'mono_taub':mono_taub,'mono_taud':mono_taud}) # tau_b, tau_d for mono just valid for N=1
+                     'mono_taub':mono_taub,'mono_taud':mono_taud, # tau_b, tau_d for mono just valid for N=1
+                     'mono_A_lin':mono_A_lin,'mono_tau_lin':mono_tau_lin}) # mono exponential fit results for linearized fit
     
     return s_out
 
@@ -113,10 +114,55 @@ def fit_ac_mono(ac):
         popt=p0
     
     ###################################################### Calculate chisquare    
-    chisquare=np.sum(np.square(varfuncs.ac_monoexp(ac[:,0],*popt)-ac[:,1]))/(len(ac)-2)
+    chisquare=np.sum(np.square(varfuncs.ac_monoexp(ac[:,0],*popt)-ac[:,1]))/((len(ac)-2))
     
     return popt[0],popt[1],np.sqrt(chisquare)
 
+#%%
+def fit_ac_mono_lin(ac):
+    """ 
+    Least square fit of function f_lin(tau)=-log(mono_A)-tau/mono_tau to linearized autocorrelation function -log(g(tau)-1).
+    Only first 8 points of autocorrelation are used for fitting 
+    
+    Parameters
+    ---------
+    ac : numpy.ndarray
+        1st column should correspond to delay time tau of autocorrelation function.
+        2nd column should correspond to value g(tau) of autocorrelation function
+    
+    Returns
+    -------
+    mono_A_lin : float64
+        Amplitude of monoexponential fit function
+    mono_tau_lin : float64
+        Correlation time of monoeponential fit function   
+    """
+    ###################################################### Fit function definition
+    def ac_monoexp_lin(t,A,tau):
+        g=t/tau-np.log(A)
+        return g
+    ###################################################### Define start parameters
+    p0=np.empty([2])
+    p0[0]=ac[1,1] # Amplitude
+    halfvalue=1.+(p0[0]-1.)/2 # Value of half decay of ac
+    p0[1]=np.argmin(np.abs(ac[:,1]-halfvalue)) # tau
+    ###################################################### Fit boundaries
+    lowbounds=np.array([0,0])
+    upbounds=np.array([np.inf,np.inf])
+    ###################################################### Fit data
+    try:
+        popt,pcov=scipy.optimize.curve_fit(ac_monoexp_lin,ac[1:10,0],-np.log(ac[1:10,1]-1),p0,bounds=(lowbounds,upbounds),method='trf')
+    except RuntimeError:
+        popt=p0
+    except ValueError:
+        popt=p0
+    except TypeError:
+        popt=p0
+    
+    ###################################################### Calculate chisquare    
+    chisquare=np.sum(np.square(ac_monoexp_lin(ac[1:10,0],*popt)-np.log(ac[1:10,1]-1)))/(len(ac)-2)
+    
+    return popt[0],popt[1]
 #%%
 def get_tau(df,ignore=1):
     """ 
@@ -357,8 +403,8 @@ def apply_props_dask(df,conc,NoFrames,ignore,NoPartitions):
     import dask
     import dask.multiprocessing
     import dask.dataframe as dd
-    from dask.diagnostics import ProgressBar, Profiler, visualize
-    ########### Glaobally set dask scheduler to processes
+    from dask.diagnostics import ProgressBar
+    ########### Globally set dask scheduler to processes
     dask.set_options(get=dask.multiprocessing.get)
     ########### Partionate df using dask for parallelized computation
     df=df.set_index('group') # Set group as index otherwise groups will be split during partition!!!
