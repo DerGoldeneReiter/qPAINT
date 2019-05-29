@@ -8,8 +8,9 @@ figure.subplot.right:0.99
 
 axes.facecolor:white
 axes.edgecolor:black
-
 axes.linewidth:1
+axes.spines.right:True
+
 lines.linewidth:1
 lines.markersize:6
 errorbar.capsize:5
@@ -29,7 +30,7 @@ ytick.color:black
 ytick.minor.visible: False
 xtick.minor.visible: False
 
-font.family: DejaVu Sans
+font.sans-serif: 'Arial'
 mathtext.default:regular
 
 legend.borderaxespad:0.1
