@@ -8,8 +8,8 @@ import autopick
 plt.style.use('~/qPAINT/styles/FoM.mplstyle')
 
 ############################################################## Define data
-render_dir='/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/19-05-29_Streptavidin/01_20nM_p35uW_1/19-05-29_FS'
-render_name='01_20nM_p35uW_1_MMStack_Pos1.ome_locs_render.hdf5'
+render_dir='/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/19-05-29_Streptavidin/03_10nM_p35uW_1/19-05-29_JS'
+render_name='03_10nM_p35uW_1_MMStack_Pos0.ome_locs_render_picked.hdf5'
 
 ############################################################## Load data
 #### Paths

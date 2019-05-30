@@ -8,12 +8,15 @@ importlib.reload(copasi_convert)
 #%%
 # Define folder of locs_picked.hdf5 file
 dir_names=[]
-dir_names.extend(['/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/z.simulations/19-01-22_copasi_Pm2-8nt_error-meas-time/N4/36k']*3)
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/z.simulations/19-01-22_copasi_Pm2-8nt_error-meas-time/N2/36k']*2)
 # Define names of locs_picked.hdf5 file
 file_names=[]
-file_names.extend(['N4_30nM_1.txt'])
-file_names.extend(['N4_30nM_2.txt'])
-file_names.extend(['N4_30nM_3.txt'])
+file_names.extend(['N2_0-5nM_1.txt'])
+file_names.extend(['N2_1nM_1.txt'])
+#file_names.extend(['N24_10nM_1.txt'])
+#file_names.extend(['N24_20nM_1.txt'])
+#file_names.extend(['N24_30nM_1.txt'])
+
 
 # Create full path list
 path=[]

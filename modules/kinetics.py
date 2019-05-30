@@ -46,39 +46,20 @@ def _stats(df,CycleTime):
     return df_stats
 
 #%%
-def _fit_conc(df,df_stats,use_tau_stat='mean',use_A_stat='median',fix_SDS=False):
+def _fit_conc(df,df_stats,fix_SDS=False):
         
     from scipy.optimize import curve_fit
     import varfuncs
     importlib.reload(varfuncs)
     
-    #### Which statistical quantity for mono_tau is used for fit 
-    if use_tau_stat=='mean':
-        center_tau='mean'
-        low_tau='std'
-        up_tau='std'
-    elif use_tau_stat=='median':
-        center_tau='50%'
-        low_tau='25%'
-        up_tau='75%'
-    else:
-        center_tau='mean'
-        low_tau='std'
-        up_tau='std'
-    #### Which statistical quantity for mono_A is used for fit 
-    if use_A_stat=='mean':
-        center_A='mean'
-        low_A='std'
-        up_A='std'
-    elif use_A_stat=='median':
-        center_A='50%'
-        low_A='25%'
-        up_A='75%'
-    else:
-        center_A='50%'
-        low_A='25%'
-        up_A='75%'
-
+    #### Which statistical quantity
+    center_tau='mean'
+    low_tau='std'
+    up_tau='std'
+    center_A='50%'
+    low_A='25%'
+    up_A='75%'
+    
     #### Get ariables for start paramter estimates
     minc=df_stats.conc.min()
     maxc=df_stats.conc.max()
@@ -94,14 +75,15 @@ def _fit_conc(df,df_stats,use_tau_stat='mean',use_A_stat='median',fix_SDS=False)
     
     #### mono_tau vs c
     p0=[koff,kon]
-    sigma=(df_stats.loc[:,('mono_tau',low_tau)]+df_stats.loc[:,('mono_tau',up_tau)])*1
+    sigma=(df_stats.loc[:,('mono_tau',low_tau)]+df_stats.loc[:,('mono_tau',up_tau)])
+    sigma=sigma/np.sqrt(df_stats.groups)
     popt_tauc,pcov_tauc=curve_fit(varfuncs.tauc_of_c,
                              df_stats.conc*1e-9,
                              df_stats.loc[:,('mono_tau',center_tau)],
                              p0=p0,
                              sigma=sigma,
                              absolute_sigma=True)
-    perr_tauc = np.sqrt(np.diag(pcov_tauc))
+    
     #### 1/mono_A vs c
     p0=[kon/koff,1e-3]
     if fix_SDS: # Set fixed offset=0 for SDS
@@ -110,13 +92,14 @@ def _fit_conc(df,df_stats,use_tau_stat='mean',use_A_stat='median',fix_SDS=False)
     else:
         p0=[kon/koff,1e-3]
     sigma=(df_stats.loc[:,('mono_A',low_A)]+df_stats.loc[:,('mono_A',up_A)])/df_stats.loc[:,('mono_A',center_A)]**2
+    sigma=sigma/np.sqrt(df_stats.groups)
     popt_A,pcov_A=curve_fit(varfuncs.Ainv_of_c,
                           df_stats.conc*1e-9,
                           1/df_stats.loc[:,('mono_A',center_A)],
                           p0=p0,
                           sigma=sigma,
                           absolute_sigma=True)
-    perr_A=np.sqrt(np.diag(pcov_A))
+    
     ##### mono_tau vs 1/mono_A
     if fix_SDS: # Set fixed N=1 for SDS
         p0=[koff]
@@ -125,13 +108,14 @@ def _fit_conc(df,df_stats,use_tau_stat='mean',use_A_stat='median',fix_SDS=False)
         p0=[koff,N]
         
     sigma=(df_stats.loc[:,('mono_tau',low_tau)]+df_stats.loc[:,('mono_tau',up_tau)])*1
+    sigma=sigma/np.sqrt(df_stats.groups)
     popt_mix,pcov_mix=curve_fit(varfuncs.tauc_of_Ainv,
                              1/df_stats.loc[:,('mono_A',center_A)],
                              df_stats.loc[:,('mono_tau',center_tau)],
                              p0=p0,
                              sigma=sigma,
                              absolute_sigma=True)
-    perr_mix=np.sqrt(np.diag(pcov_mix))
+    
     ##### tau_d vs c
     df_stats['fit_taud']=varfuncs.taud_of_tauc(df_stats.loc[:,('mono_tau',center_tau)],popt_mix[0]).values
     
@@ -146,7 +130,7 @@ def _fit_conc(df,df_stats,use_tau_stat='mean',use_A_stat='median',fix_SDS=False)
                           p0=p0,
                           sigma=None,
                           absolute_sigma=False)
-    perr_taud=np.sqrt(np.diag(pcov_taud))
+    
     ##### tau_d vs c (Picasso)
     if fix_SDS: # Set fixed offset=0 for SDS
         p0=[koff]
@@ -159,55 +143,45 @@ def _fit_conc(df,df_stats,use_tau_stat='mean',use_A_stat='median',fix_SDS=False)
                           p0=p0,
                           sigma=None,
                           absolute_sigma=False)
-    perr_taud_pic=np.sqrt(np.diag(pcov_taud_pic))
     
     #### Assign fit results to df_fit
     df_fit=pd.DataFrame([],index=['tau_conc','A_conc','tau_A','taud_conc','taud_pic'])
-    df_fit=df_fit.assign(popt=[popt_tauc,popt_A,popt_mix,popt_taud,popt_taud_pic])
-    df_fit=df_fit.assign(perr=[perr_tauc,perr_A,perr_mix,perr_taud,perr_taud_pic])
-    
+    df_fit=df_fit.assign(popt0=[popt_tauc[0],popt_A[0],popt_mix[0],popt_taud[0],popt_taud_pic[0]])
+    if fix_SDS:
+        df_fit=df_fit.assign(popt1=[popt_tauc[1],0,1,0,0])
+    else:
+        df_fit=df_fit.assign(popt1=[popt_tauc[1],popt_A[1],popt_mix[1],popt_taud[1],popt_taud_pic[1]])
+        
     #### Assign number of docking sites to df
+    koff=df_fit.loc['tau_conc','popt0'] # [Hz]
+    kon=df_fit.loc['tau_conc','popt1'] # [Hz/M]
+    
+    #### Assign number of docking sites to df_stats
     for expID in df_stats.index:
-        df.loc[expID,'n_ac']=(df_stats.loc[expID,'fit_taud'].values*popt_mix[0])/df.loc[expID,'mono_A'].values
+        c=df_stats.loc[expID,('conc','')]*1e-9 # Concentration [M]
+        df.loc[expID,'N']=(koff/(kon*c))*(1./df.loc[expID,'mono_A'].values)
+        df_stats.loc[expID,('N','50%')]=df.loc[expID,'N'].median()
+        df_stats.loc[expID,('N','25%')]=np.percentile(df.loc[expID,'N'],25)
+        df_stats.loc[expID,('N','75%')]=np.percentile(df.loc[expID,'N'],75)
         
     return df,df_stats,df_fit
 
 #%%
-def _plot(df_stats,df_fit,use_tau_stat='mean',use_A_stat='median'):
+def _plot(df_stats,df_fit):
     
-
-    #### Which statistical quantity for mono_tau is used 
-    if use_tau_stat=='mean':
-        center_tau='mean'
-        low_tau='std'
-        up_tau='std'
-    elif use_tau_stat=='median':
-        center_tau='50%'
-        low_tau='25%'
-        up_tau='75%'
-    else:
-        center_tau='mean'
-        low_tau='std'
-        up_tau='std'
-    #### Which statistical quantity for mono_A is used
-    if use_A_stat=='mean':
-        center_A='mean'
-        low_A='std'
-        up_A='std'
-    elif use_A_stat=='median':
-        center_A='50%'
-        low_A='25%'
-        up_A='75%'
-    else:
-        center_A='50%'
-        low_A='25%'
-        up_A='75%'
+    #### Which statistical quantity
+    center_tau='mean'
+    low_tau='std'
+    up_tau='std'
+    center_A='50%'
+    low_A='25%'
+    up_A='75%'
     
     import matplotlib.pyplot as plt
     import varfuncs
     
     f=plt.figure(num=11,figsize=[7,6])
-    f.subplots_adjust(bottom=0.1,top=0.99,left=0.1,right=0.99,wspace=0.3,hspace=0.3)
+    f.subplots_adjust(bottom=0.1,top=0.96,left=0.1,right=0.99,wspace=0.3,hspace=0.3)
     f.clear()
     
     ################################################ mono_tau vs concentration
@@ -215,8 +189,9 @@ def _plot(df_stats,df_fit,use_tau_stat='mean',use_A_stat='median'):
     x=df_stats.conc
     x_inter=np.arange(0,x.max()+5,0.1)
     y=df_stats.loc[:,(field,center_tau)]
-    yerr=[df_stats.loc[:,(field,low_tau)],df_stats.loc[:,(field,up_tau)]]
-    popt=df_fit.loc['tau_conc','popt']
+    yerr=[df_stats.loc[:,(field,low_tau)],#/np.sqrt(df_stats.groups),
+                       df_stats.loc[:,(field,up_tau)]]#/np.sqrt(df_stats.groups)]
+    popt=df_fit.loc['tau_conc',:]
     
     ax=f.add_subplot(221)  
     ax.errorbar(x,y,yerr=yerr,fmt='o',label='data')
@@ -232,7 +207,7 @@ def _plot(df_stats,df_fit,use_tau_stat='mean',use_A_stat='median'):
     y=1/df_stats.loc[:,(field,center_A)]
     yerr=[df_stats.loc[:,(field,low_A)]/df_stats.loc[:,(field,center_A)]**2,
           df_stats.loc[:,(field,up_A)]/df_stats.loc[:,(field,center_A)]**2]
-    popt=df_fit.loc['A_conc','popt']
+    popt=df_fit.loc['A_conc',:]
     
     ax=f.add_subplot(222)
     ax.errorbar(x,y,yerr=yerr,fmt='o',label='data')
@@ -252,7 +227,7 @@ def _plot(df_stats,df_fit,use_tau_stat='mean',use_A_stat='median'):
     xerr=[df_stats.loc[:,(field,low_A)]/df_stats.loc[:,(field,center_A)]**2,
           df_stats.loc[:,(field,up_A)]/df_stats.loc[:,(field,center_A)]**2]
     x_inter=np.arange(0,x.max()+0.2,0.1)
-    popt=df_fit.loc['tau_A','popt']
+    popt=df_fit.loc['tau_A',:]
     
     ax=f.add_subplot(223)
     ax.errorbar(x,y,xerr=xerr,yerr=yerr,fmt='o',c='k',label='data')
@@ -266,9 +241,9 @@ def _plot(df_stats,df_fit,use_tau_stat='mean',use_A_stat='median'):
     
     field='fit_taud'
     x=df_stats.conc
-    x_inter=np.arange(0,x.max(),0.1)
+    x_inter=np.arange(0,x.max()+5,0.1)
     y=1/df_stats[field]
-    popt=df_fit.loc['taud_conc','popt']
+    popt=df_fit.loc['taud_conc',:]
     
     ax.errorbar(x,y,fmt='o',c='r',label='ac')
     ax.plot(x_inter,varfuncs.taudinv_of_c(x_inter*1e-9,*popt),'-',c='r',lw=2,label=None)
@@ -277,7 +252,7 @@ def _plot(df_stats,df_fit,use_tau_stat='mean',use_A_stat='median'):
     x=df_stats.conc
     x_inter=np.arange(0,x.max()+5,0.1)
     y=1/df_stats[(field,center_A)]
-    popt=df_fit.loc['taud_pic','popt']
+    popt=df_fit.loc['taud_pic',:]
     
     ax.errorbar(x,y,fmt='o',c='b',label='pic')
     ax.plot(x_inter,varfuncs.taudinv_of_c(x_inter*1e-9,*popt),'-',c='b',lw=2,label=None)
