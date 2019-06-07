@@ -428,12 +428,7 @@ def _kin_filter(df):
 
     #### Copy df
     df_drop=df.copy()
-    
-    ##### General radial filter if full chip is used
-    if (df_drop.mean_y.max()>490):
-        istrue=((df_drop.mean_x-512)**2+(df_drop.mean_y-512)**2)>490**2
-        df_drop.drop(df_drop[istrue].index,inplace=True)
-         
+             
     ####Remove groups with ...
     #### ... deviation between linear fit and exponential fit higher than 20%
     istrue=(np.abs(df_drop.mono_tau_lin-df_drop.mono_tau)/df_drop.mono_tau_lin)>0.2

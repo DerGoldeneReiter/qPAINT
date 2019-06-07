@@ -81,8 +81,8 @@ def _fit_conc(df,df_stats,fix_SDS=False):
                              df_stats.conc*1e-9,
                              df_stats.loc[:,('mono_tau',center_tau)],
                              p0=p0,
-                             sigma=sigma,
-                             absolute_sigma=True)
+                             sigma=None,
+                             absolute_sigma=False)
     
     #### 1/mono_A vs c
     p0=[kon/koff,1e-3]
@@ -262,3 +262,19 @@ def _plot(df_stats,df_fit):
     ax.set_xlabel('Concentration (nM)')
     ax.set_ylabel(r'$1/\tau_d$ (Hz)')
     ax.legend(loc='upper center')
+    
+#%%    
+def _remove_percentile(df,conc,field,p,remove='both'):
+    
+    #### Find thresholds
+    crit_low=np.percentile(df.loc[df.conc==conc,field],p)
+    crit_up=np.percentile(df.loc[df.conc==conc,field],100-p)
+    
+    if remove=='both':
+        istrue=(df.conc==conc)&((df.loc[:,field]<crit_low)|((df.loc[:,field]>crit_up)))
+    elif remove=='low':
+        istrue=(df.conc==conc)&(df.loc[:,field]<crit_low)
+    elif remove=='up':
+        istrue=(df.conc==conc)&(df.loc[:,field]>crit_up)
+        
+    return df.drop(df.loc[istrue].index)
