@@ -8,8 +8,8 @@ import autopick
 plt.style.use('~/qPAINT/styles/FoM.mplstyle')
 
 ############################################################## Define data
-render_dir='/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/19-05-29_Streptavidin/03_10nM_p35uW_1/19-05-29_JS'
-render_name='03_10nM_p35uW_1_MMStack_Pos0.ome_locs_render_picked.hdf5'
+render_dir='/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/19-06-18_N=48/id114_5nM_p35uW_control_1/19-06-18_FS'
+render_name='id114_5nM_p35uW_control_1_MMStack_Pos0.ome_locs_render.hdf5'
 
 ############################################################## Load data
 #### Paths
@@ -20,7 +20,7 @@ locs_render,info_render=picasso.io.load_locs(render_path)
 
 #### Render image
 oversampling=5
-min_blur_width=0.05
+min_blur_width=0.02
 print('... rendering with oversampling of %i'%(oversampling))
 n_locs,image_render=picasso.render.render(
         locs_render,
@@ -44,15 +44,15 @@ picklocs_render=autopick._autopick(image_render,render_mng,render_box,fit=True)
 #%%
 ############################################################## View picks
 #### Set view in real pixels (no oversampling)
-view_x=500
-view_y=120
-view_width=30
+view_x=0
+view_y=-10
+view_width=40
 
 f=plt.figure(num=12,figsize=[7,7])
 f.subplots_adjust(bottom=0.,top=1.,left=0.,right=1.)
 f.clear()
 ax=f.add_subplot(111)
-ax.imshow(image_render,cmap='jet',vmin=0,vmax=200,interpolation='nearest')
+ax.imshow(image_render,cmap='jet',vmin=0,vmax=15,interpolation='nearest')
 ax.scatter(picklocs_render.x,picklocs_render.y,s=200,marker='+',alpha=1,color='w',linewidths=1)
 ax.set_xlim(view_x*oversampling,(view_x+view_width)*oversampling)
 ax.set_ylim(view_y*oversampling,(view_y+view_width)*oversampling)

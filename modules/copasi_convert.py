@@ -32,7 +32,7 @@ def copasi2locs(path,interval_size,intervals):
         # Convert time to frames
         arr[:,0]=arr[:,0]*int(1/interval_size)
         # Add column for x, y and bg
-        arr=np.c_[arr,np.zeros(len(arr)),np.zeros(len(arr)),np.zeros(len(arr))]
+        arr=np.c_[arr,np.arange(0,len(arr),1),np.zeros(len(arr)),np.zeros(len(arr))]
         # Add column for group
         arr=np.c_[arr,np.ones(len(arr))*g]
         # Add arr to array of all arrays arr_all
