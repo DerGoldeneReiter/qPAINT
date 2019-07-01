@@ -1,51 +1,38 @@
 #################################################### Load packages
-import numpy as np #numpy data formats and operators
-import matplotlib.pyplot as plt #plotting
 import os #platform independent paths
 import importlib
 # Load user defined functions
+import var_io
 import pickprops_calls as props_call
 importlib.reload(props_call)
 
 ############################################################## Define number of groups that are combined into single one
-N=48
-q=3
-compress=True
+N=[12,24]
+compress=False
 ############################################################## Define data paths
 dir_names=[]
-dir_names.extend(['/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/19-02-04_c-series_SDS_Pm2_NoPEG_POC/SDS-Pm2-8nt-NoPEG_c5nM_p35uW_1/19-02-04_JS']*6)
-dir_names.extend(['/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/19-02-04_c-series_SDS_Pm2_NoPEG_POC/SDS-Pm2-8nt-NoPEG_c10nM_p35uW_1/19-02-04_JS']*6)
-dir_names.extend(['/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/19-02-04_c-series_SDS_Pm2_NoPEG_POC/SDS-Pm2-8nt-NoPEG_c20nM_p35uW_1/19-02-04_JS']*6)
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/z.simulations/19-06-19_Pm2_2B07/N1_exp50']*4)
 
-# Define names of locs_picked.hdf5 file
 file_names=[]
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c5nM_p35uW_1_MMStack_Pos0.ome_locs_picked.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c5nM_p35uW_1_MMStack_Pos0.ome_locs_picked_props_ig1.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c5nM_p35uW_2_MMStack_Pos1.ome_locs_picked.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c5nM_p35uW_2_MMStack_Pos1.ome_locs_picked_props_ig1.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c5nM_p35uW_2_MMStack_Pos2.ome_locs_picked.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c5nM_p35uW_2_MMStack_Pos2.ome_locs_picked_props_ig1.hdf5'])
-
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c10nM_p35uW_1_MMStack_Pos0.ome_locs_picked.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c10nM_p35uW_1_MMStack_Pos0.ome_locs_picked_props_ig1.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c10nM_p35uW_1_MMStack_Pos1.ome_locs_picked.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c10nM_p35uW_1_MMStack_Pos1.ome_locs_picked_props_ig1.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c10nM_p35uW_1_MMStack_Pos2.ome_locs_picked.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c10nM_p35uW_1_MMStack_Pos2.ome_locs_picked_props_ig1.hdf5'])
-
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c20nM_p35uW_1_MMStack_Pos0.ome_locs_picked.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c20nM_p35uW_1_MMStack_Pos0.ome_locs_picked_props_ig1.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c20nM_p35uW_1_MMStack_Pos1.ome_locs_picked.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c20nM_p35uW_1_MMStack_Pos1.ome_locs_picked_props_ig1.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c20nM_p35uW_1_MMStack_Pos2.ome_locs_picked.hdf5'])
-file_names.extend(['SDS-Pm2-8nt-NoPEG_c20nM_p35uW_1_MMStack_Pos2.ome_locs_picked_props_ig1.hdf5'])
+file_names.extend(['N1_2-5nM_locs_picked_props_ig0.hdf5'])
+file_names.extend(['N1_5nM_locs_picked_props_ig0.hdf5'])
+file_names.extend(['N1_10nM_locs_picked_props_ig0.hdf5'])
+file_names.extend(['N1_20nM_locs_picked_props_ig0.hdf5'])
 
 ############################################################## Define
 #### Create list of paths
-path_locs=[os.path.join(dir_names[i],file_names[i]) for i in np.arange(0,len(file_names),2)]
-path_props=[os.path.join(dir_names[i],file_names[i]) for i in np.arange(1,len(file_names),2)]
+path_locs=[os.path.join(dir_names[i],file_names[i].replace('picked_props_ig0','picked')) for i in range(0,len(file_names))]
+path_props=[os.path.join(dir_names[i],file_names[i]) for i in range(0,len(file_names))]
 
 for i in range(0,len(path_locs)):
-    locs_combine,groups_map=props_call.combine_picks(path_locs[i],path_props[i],N,q,compress)
-
+    #### Read in '_picked' and corresponding '_picked_props' file
+    locs,info_locs=var_io.read_locs(path_locs[i])
+    props,info_props=var_io.read_locs(path_props[i])
+    
+    for n in N:
+        #### Stack
+        locs_combine,info_combine=props_call.combine_picks(locs,info_locs,props,n,compress)
+        #### Save
+        savename_ext='_stack%i'%(n)
+        var_io.save_locs(locs_combine,info_combine,path_locs[i],savename_ext=savename_ext)
 

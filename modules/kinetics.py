@@ -137,13 +137,16 @@ def _fit_conc(df,df_stats,fix_SDS=False):
         print('Fixed offset=0 for taud_pic vs c')
     else:
         p0=[koff,1e-3]
-    popt_taud_pic,pcov_taud_pic=curve_fit(varfuncs.taudinv_of_c,
+    try:
+        popt_taud_pic,pcov_taud_pic=curve_fit(varfuncs.taudinv_of_c,
                           df_stats.conc*1e-9,
                           1/df_stats.loc[:,('tau_d',center_A)],
                           p0=p0,
                           sigma=None,
                           absolute_sigma=False)
-    
+    except ValueError: 
+        popt_taud_pic=[0,0]
+        
     #### Assign fit results to df_fit
     df_fit=pd.DataFrame([],index=['tau_conc','A_conc','tau_A','taud_conc','taud_pic'])
     df_fit=df_fit.assign(popt0=[popt_tauc[0],popt_A[0],popt_mix[0],popt_taud[0],popt_taud_pic[0]])
