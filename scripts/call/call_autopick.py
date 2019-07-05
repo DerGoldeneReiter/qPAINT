@@ -5,11 +5,11 @@ import picasso.io
 import picasso.render
 import autopick
 
-plt.style.use('~/qPAINT/styles/FoM.mplstyle')
+plt.style.use('~/qPAINT/styles/paper.mplstyle')
 
 ############################################################## Define data
-render_dir='/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/19-06-18_N=48/id114_5nM_p35uW_control_1/19-06-18_FS'
-render_name='id114_5nM_p35uW_control_1_MMStack_Pos0.ome_locs_render.hdf5'
+render_dir='/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/19-06-18_N=48/id133_2-5nM_p35uW_1/19-07-01_FS'
+render_name='id133_2-5nM_p35uW_1_MMStack_Pos0.ome_locs_render.hdf5'
 
 ############################################################## Load data
 #### Paths

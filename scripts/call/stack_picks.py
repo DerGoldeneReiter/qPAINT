@@ -7,17 +7,15 @@ import pickprops_calls as props_call
 importlib.reload(props_call)
 
 ############################################################## Define number of groups that are combined into single one
-N=[12,24]
+N=[48]
 compress=False
 ############################################################## Define data paths
 dir_names=[]
-dir_names.extend(['/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/z.simulations/19-06-19_Pm2_2B07/N1_exp50']*4)
+dir_names.extend(['/fs/pool/pool-schwille-paint/Data/p04.lb-FCS/z.simulations/19-06-19_Pm2_2B07/N1_exp30']*2)
 
 file_names=[]
-file_names.extend(['N1_2-5nM_locs_picked_props_ig0.hdf5'])
-file_names.extend(['N1_5nM_locs_picked_props_ig0.hdf5'])
-file_names.extend(['N1_10nM_locs_picked_props_ig0.hdf5'])
-file_names.extend(['N1_20nM_locs_picked_props_ig0.hdf5'])
+file_names.extend(['N1_2-5nM_01_locs_picked_props_ig0.hdf5'])
+file_names.extend(['N1_5nM_01_locs_picked_props_ig0.hdf5'])
 
 ############################################################## Define
 #### Create list of paths

@@ -28,7 +28,6 @@ def combine_picks(locs,info_locs,props,N,compress=False):
 
     """
     ############################################################# Definitions and modules
-    import var_io
     from tqdm import tqdm
     
     def map_groups(df,group_map):
